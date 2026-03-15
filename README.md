@@ -7,10 +7,11 @@
 3. [Los tres scripts de captura](#3-los-tres-scripts-de-captura)
 4. [Esquema de Azure SQL Database](#4-esquema-de-azure-sql-database)
 5. [Cálculo de velocidad y bearing](#5-cálculo-de-velocidad-y-bearing)
-6. [Despliegue en Azure](#6-despliegue-en-azure)
-7. [Gestión de los servicios en la VM](#7-gestión-de-los-servicios-en-la-vm)
-8. [Consultar y exportar datos](#8-consultar-y-exportar-datos)
-9. [Próximos pasos — Análisis y ML](#9-próximos-pasos--análisis-y-ml)
+6. [Puesta en marcha — paso a paso](#6-puesta-en-marcha--paso-a-paso)
+7. [Despliegue en Azure](#7-despliegue-en-azure)
+8. [Gestión de los servicios en la VM](#8-gestión-de-los-servicios-en-la-vm)
+9. [Consultar y exportar datos](#9-consultar-y-exportar-datos)
+10. [Próximos pasos — Análisis y ML](#10-próximos-pasos--análisis-y-ml)
 
 ---
 
@@ -25,17 +26,27 @@ Se capturan tres tipos de datos:
 
 Todo se ejecuta de forma autónoma en una **VM Azure B1s** (Ubuntu 22.04) sin necesidad de que el ordenador personal esté encendido. Los datos se almacenan centralizadamente en **Azure SQL Database**, accesible desde cualquier cliente SQL (SSMS, Azure Data Studio, DBeaver, pandas...).
 
+### Sistema de captura en batch
+
+Para reducir el consumo de vCore-segundos del tier gratuito de Azure SQL, los scripts **no escriben en la BD en cada ciclo**. En su lugar:
+
+- Capturan datos cada **30 segundos** y los acumulan en memoria
+- Cada **5 minutos** (10 ciclos) abren una conexión, hacen un insert masivo y la cierran
+- Entre flushes, la BD permanece inactiva y puede **auto-pausarse** (ahorro ~80% de vCore-segundos)
+
+La velocidad y bearing se calculan usando un **caché en memoria** de la última posición conocida por vehículo, sin necesidad de consultar la BD entre flushes.
+
 ### Infraestructura
 
 | Componente | Detalle |
 |---|---|
 | VM | Azure Standard B1s — Ubuntu 22.04 LTS |
-| IP pública VM | *(ver azure_db.py / configuración privada)* |
-| Usuario SSH | *(ver configuración privada)* |
+| IP pública VM | `68.221.175.21` |
+| Usuario SSH | `azureuserRenfe` |
 | Clave SSH | `deploy/RenfeKey.pem` |
 | Scripts en VM | `/opt/renfe/` |
-| Base de datos | Azure SQL Database |
-| Servidor SQL | *(ver azure_db.py)* |
+| Base de datos | Azure SQL Database — `SQLJoseDavid` |
+| Servidor SQL | `sqljosedavid.database.windows.net` |
 | Driver | Microsoft ODBC Driver 18 for SQL Server |
 
 ---
@@ -70,7 +81,7 @@ El JSON de posiciones tiene esta estructura:
 
 > **Nota:** Renfe NO publica `speed` ni `bearing` en el GTFS-RT. Se calculan de forma derivada entre snapshots consecutivos (ver sección 5).
 >
-> **Limitación conocida:** Renfe actualiza las coordenadas GPS de cercanías cada 2-10 minutos (no cada 20s). El `feed_timestamp` del header sí cambia cada 20s, pero las coordenadas permanecen congeladas. Los scripts detectan si la posición realmente cambió antes de calcular velocidad.
+> **Limitación conocida:** Renfe actualiza las coordenadas GPS de cercanías cada 2-10 minutos (no cada 20s como el feed). El `feed_timestamp` del header sí cambia cada 20s, pero las coordenadas permanecen congeladas. Los scripts detectan si la posición realmente cambió antes de calcular velocidad.
 
 ### Largo Recorrido — tiempo-real.largorecorrido.renfe.com
 
@@ -98,9 +109,10 @@ lon: -7.0 – -4.5
 
 **Uso:**
 ```bash
-python renfe_asturias_cercanias.py              # Captura única
-python renfe_asturias_cercanias.py --loop 30   # Captura cada 30 segundos
-python renfe_asturias_cercanias.py --summary   # Ver resumen estadístico
+python renfe_asturias_cercanias.py               # Captura única
+python renfe_asturias_cercanias.py --loop 30     # Captura cada 30s, flush a BD cada 5 min
+python renfe_asturias_cercanias.py --summary     # Ver resumen estadístico
+python renfe_asturias_cercanias.py --loop 30 --flush-every 20  # Flush cada 10 min
 ```
 
 ---
@@ -119,9 +131,9 @@ lon: -6.5 – -5.7
 
 **Uso:**
 ```bash
-python renfe_cadiz_cercanias.py              # Captura única
-python renfe_cadiz_cercanias.py --loop 30   # Captura cada 30 segundos
-python renfe_cadiz_cercanias.py --summary   # Ver resumen estadístico
+python renfe_cadiz_cercanias.py               # Captura única
+python renfe_cadiz_cercanias.py --loop 30     # Captura cada 30s, flush a BD cada 5 min
+python renfe_cadiz_cercanias.py --summary     # Ver resumen estadístico
 ```
 
 ---
@@ -147,7 +159,7 @@ Captura datos de los trenes de largo recorrido en el corredor Cádiz ↔ Madrid 
 ```bash
 python renfe_largo_recorrido.py --init-stations  # Solo la PRIMERA vez (carga estaciones)
 python renfe_largo_recorrido.py                  # Captura única
-python renfe_largo_recorrido.py --loop 30        # Captura cada 30 segundos
+python renfe_largo_recorrido.py --loop 30        # Captura cada 30s, flush a BD cada 5 min
 python renfe_largo_recorrido.py --summary        # Ver resumen estadístico
 ```
 
@@ -157,7 +169,7 @@ python renfe_largo_recorrido.py --summary        # Ver resumen estadístico
 
 ### 3.4 `azure_db.py` — Módulo de conexión compartido
 
-Módulo importado por los tres scripts. Centraliza la cadena de conexión a Azure SQL y expone dos funciones:
+Módulo importado por los tres scripts. Lee las credenciales del fichero `.env` y centraliza la conexión a Azure SQL.
 
 ```python
 get_conn()              # Devuelve una conexión pyodbc activa
@@ -210,7 +222,7 @@ Retrasos por parada y viaje.
 
 ### 4.3 Cercanías — `asturias_service_alerts` / `cadiz_service_alerts`
 
-Alertas e incidencias filtradas por keywords de la zona (nombres de ciudades y estaciones).
+Alertas e incidencias filtradas por keywords de la zona.
 
 | Columna | Tipo | Descripción |
 |---|---|---|
@@ -285,13 +297,22 @@ Catálogo completo de estaciones Renfe (~1000 estaciones). Se carga una vez con 
 
 Renfe no publica velocidad ni rumbo en sus feeds. Se calculan comparando snapshots consecutivos del mismo vehículo.
 
+### Caché en memoria
+
+Desde la refactorización al sistema de batch, el cálculo de velocidad ya **no consulta la BD**. En su lugar se usan dos cachés en memoria:
+
+- `_position_cache`: última posición conocida por `vehicle_id`
+- `_first_pos_cache`: primera vez que se vio cada vehículo en cada posición (para compensar GPS lento)
+
+Ambos cachés se mantienen durante toda la sesión del proceso. Si el servicio se reinicia, los primeros ciclos no tendrán velocidad calculada hasta acumular al menos dos posiciones en memoria.
+
 ### Algoritmo — compensación de baja frecuencia GPS
 
 El GPS de cercanías se actualiza cada **2-10 minutos** (no cada 20s como el feed). Para evitar velocidades infladas:
 
-1. Se consulta el snapshot anterior del mismo `vehicle_id`.
-2. Si la posición **no ha cambiado** (`ABS(lat_nueva - lat_vieja) < 0.0001`): `speed = NULL`. El tren no se ha movido según los datos disponibles.
-3. Si la posición **ha cambiado**: se busca la **primera vez** que se capturó la posición anterior (`MIN(captured_at)` con esas coordenadas). Esto da el tiempo real que el tren llevaba en ese punto.
+1. Se consulta el snapshot anterior del mismo `vehicle_id` en `_position_cache`.
+2. Si la posición **no ha cambiado** (`ABS(lat_nueva - lat_vieja) < 0.0001`): `speed = NULL`.
+3. Si la posición **ha cambiado**: se busca en `_first_pos_cache` la primera vez que se capturó la posición anterior. Esto da el tiempo real que el tren llevaba en ese punto.
 4. `velocidad = distancia_Haversine / tiempo_real_transcurrido`
 5. Se filtran valores ruidosos:
    - `< 0.5 km/h` → `NULL` (tren parado con drift GPS)
@@ -311,116 +332,196 @@ def haversine_km(lat1, lon1, lat2, lon2):
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 ```
 
-### Bearing (rumbo 0-360°)
+---
 
-Calculado con la fórmula de rumbo esférico entre los dos puntos GPS donde se detectó movimiento real.
+## 6. Puesta en marcha — paso a paso
+
+Esta sección cubre todo el proceso desde cero: configurar credenciales, subir archivos a la VM y arrancar los servicios.
+
+### Prerrequisitos
+
+- VM Azure B1s en marcha con Ubuntu 22.04
+- Azure SQL Database creada y accesible desde la IP de la VM
+- Clave SSH `deploy/RenfeKey.pem` disponible localmente
 
 ---
 
-## 6. Despliegue en Azure
+### Paso 1 — Configurar el archivo `.env`
 
-### 6.1 Recursos creados en Azure
+Crea o edita el fichero `.env` en la raíz del proyecto con las credenciales de Azure SQL:
 
-| Recurso | Detalle |
-|---|---|
-| Máquina virtual | Standard B1s — Ubuntu 22.04 |
-| Azure SQL Database | Ver `azure_db.py` para servidor y base de datos |
-| Regla de firewall SQL | IP de la VM añadida en Azure Portal → SQL Server → Networking |
+```env
+DB_SERVER=sqljosedavid.database.windows.net
+DB_NAME=SQLJoseDavid
+DB_USER=JoseDavid
+DB_PASSWORD=tu_password_aqui
+```
 
-### 6.2 Preparar la clave SSH en tu PC (PowerShell)
+> El `.env` está en `.gitignore` y **nunca se sube al repositorio**.
+
+---
+
+### Paso 2 — Preparar los permisos de la clave SSH (solo Windows, solo la primera vez)
+
+Ejecuta en PowerShell desde la raíz del proyecto:
 
 ```powershell
-# Dar permisos correctos a la clave (SSH la rechaza si tiene permisos amplios)
 icacls "deploy\RenfeKey.pem" /inheritance:r
 icacls "deploy\RenfeKey.pem" /grant:r "${env:USERNAME}:(R)"
 ```
 
-### 6.3 Subir los scripts a la VM
+---
 
-Desde el directorio del proyecto (`C:\Users\Usuario\Desktop\Scripts\App\ScrapingWebRenfe`):
+### Paso 3 — Subir todos los archivos a la VM
 
-```powershell
-scp -i deploy\RenfeKey.pem `
-    renfe_asturias_cercanias.py renfe_cadiz_cercanias.py renfe_largo_recorrido.py azure_db.py `
-    <usuario>@<ip-vm>:~/
+Desde la raíz del proyecto en tu terminal local:
 
-scp -i deploy\RenfeKey.pem deploy\setup.sh <usuario>@<ip-vm>:~/
+```bash
+scp -i deploy/RenfeKey.pem \
+    renfe_asturias_cercanias.py \
+    renfe_cadiz_cercanias.py \
+    renfe_largo_recorrido.py \
+    azure_db.py \
+    .env \
+    deploy/setup.sh \
+    azureuserRenfe@68.221.175.21:/home/azureuserRenfe/
 ```
 
-> **Importante:** El archivo `.env` con las credenciales **no está en el repositorio** (está en `.gitignore`). Hay que subirlo aparte manualmente:
-> ```powershell
-> scp -i deploy\RenfeKey.pem .env <usuario>@<ip-vm>:~/
-> ```
+---
 
-### 6.4 Conectarse a la VM
+### Paso 4 — Conectarse a la VM
 
-```powershell
-ssh -i deploy\RenfeKey.pem <usuario>@<ip-vm>
+```bash
+ssh -i deploy/RenfeKey.pem azureuserRenfe@68.221.175.21
 ```
 
-### 6.5 Ejecutar el setup en la VM (solo la primera vez)
+---
+
+### Paso 5 — Ejecutar el setup (solo la primera vez)
 
 Una vez conectado por SSH:
 
 ```bash
 chmod +x ~/setup.sh
-sudo ~/setup.sh
+sudo bash ~/setup.sh
 ```
 
 El script `setup.sh` hace automáticamente:
 1. Actualiza el sistema (`apt-get update && upgrade`)
 2. Instala Python 3 y pip
-3. Instala **Microsoft ODBC Driver 18 for SQL Server**
-4. Instala `requests`, `pyodbc` y `python-dotenv` vía pip
+3. Instala Microsoft ODBC Driver 18 for SQL Server
+4. Instala `requests`, `pyodbc` y `python-dotenv`
 5. Copia los scripts a `/opt/renfe/`
 6. Crea e inicia los 3 servicios systemd con `--loop 30`
 
-```bash
-# Copiar el .env al directorio de la aplicación
-sudo cp ~/.env /opt/renfe/.env
+---
 
-# Tras el setup, cargar catálogo de estaciones (largo recorrido, solo una vez):
+### Paso 6 — Copiar el `.env` a `/opt/renfe/`
+
+```bash
+sudo cp /home/azureuserRenfe/.env /opt/renfe/.env
+sudo chmod 644 /opt/renfe/.env
+```
+
+> **Importante:** el `.env` debe tener permisos `644` (no `600`), ya que los scripts se ejecutan con distintos usuarios según el contexto (systemd vs. terminal).
+
+---
+
+### Paso 7 — Cargar el catálogo de estaciones (solo la primera vez)
+
+Solo necesario para el script de largo recorrido:
+
+```bash
 python3 /opt/renfe/renfe_largo_recorrido.py --init-stations
-```
-
-### 6.6 Actualizar scripts en la VM
-
-Cuando se modifica un script localmente:
-
-```powershell
-# Subir desde Windows
-scp -i deploy\RenfeKey.pem renfe_asturias_cercanias.py <usuario>@<ip-vm>:~/
-
-# En la VM: copiar y reiniciar
-sudo cp ~/renfe_asturias_cercanias.py /opt/renfe/
-sudo systemctl restart renfe-asturias
-```
-
-Si se modifican las credenciales (`.env`):
-
-```powershell
-# Subir el nuevo .env desde Windows
-scp -i deploy\RenfeKey.pem .env <usuario>@<ip-vm>:~/
-```
-
-```bash
-# En la VM: reemplazar y reiniciar todos los servicios
-sudo cp ~/.env /opt/renfe/.env
-sudo systemctl restart renfe-asturias renfe-cadiz renfe-largo
-```
 ```
 
 ---
 
-## 7. Gestión de los servicios en la VM
+### Paso 8 — Reiniciar y verificar los servicios
+
+```bash
+sudo systemctl restart renfe-asturias renfe-cadiz renfe-largo
+sudo systemctl status renfe-asturias renfe-cadiz renfe-largo
+```
+
+Los tres servicios deben aparecer como `active (running)`.
+
+---
+
+### Paso 9 — Comprobar los logs
+
+```bash
+journalctl -u renfe-asturias -f
+```
+
+Deberías ver algo así cada 30 segundos:
+
+```
+Tablas e índices verificados (Azure SQL — Asturias).
+Modo loop: captura cada 30s, flush a BD cada 300s (Ctrl+C para parar)
+
+[2026-03-15 21:30:00] Posiciones: 8 | Trip Updates: 12 | Alertas: 0 | 1.3s
+[2026-03-15 21:30:30] Posiciones: 8 | Trip Updates: 12 | Alertas: 0 | 1.2s
+...
+  → Flush BD: 80 posiciones | 120 trip updates | 0 alertas    ← cada 5 min
+```
+
+---
+
+### Actualizar scripts en el futuro
+
+Cuando modifiques un script localmente:
+
+```bash
+# 1. Subir desde tu PC
+scp -i deploy/RenfeKey.pem renfe_asturias_cercanias.py azureuserRenfe@68.221.175.21:/home/azureuserRenfe/
+
+# 2. En la VM: copiar y reiniciar
+sudo cp /home/azureuserRenfe/renfe_asturias_cercanias.py /opt/renfe/
+sudo systemctl restart renfe-asturias
+```
+
+Para subir todos los scripts a la vez:
+
+```bash
+# Desde tu PC
+scp -i deploy/RenfeKey.pem renfe_asturias_cercanias.py renfe_cadiz_cercanias.py renfe_largo_recorrido.py azure_db.py azureuserRenfe@68.221.175.21:/home/azureuserRenfe/
+
+# En la VM
+sudo cp /home/azureuserRenfe/*.py /opt/renfe/
+sudo systemctl restart renfe-asturias renfe-cadiz renfe-largo
+```
+
+---
+
+## 7. Despliegue en Azure
+
+### 7.1 Recursos creados en Azure
+
+| Recurso | Detalle |
+|---|---|
+| Máquina virtual | Standard B1s — Ubuntu 22.04 |
+| Azure SQL Database | `SQLJoseDavid` en `sqljosedavid.database.windows.net` |
+| Regla de firewall SQL | IP de la VM añadida en Azure Portal → SQL Server → Networking |
+
+### 7.2 Preparar la clave SSH en Windows (PowerShell)
+
+```powershell
+icacls "deploy\RenfeKey.pem" /inheritance:r
+icacls "deploy\RenfeKey.pem" /grant:r "${env:USERNAME}:(R)"
+```
+
+---
+
+## 8. Gestión de los servicios en la VM
 
 Los 3 scripts corren como servicios systemd y arrancan automáticamente si la VM se reinicia.
 
-| Servicio | Script | Log |
-|---|---|---|
-| `renfe-asturias` | `renfe_asturias_cercanias.py --loop 30` | `/var/log/renfe-asturias.log` |
-| `renfe-cadiz` | `renfe_cadiz_cercanias.py --loop 30` | `/var/log/renfe-cadiz.log` |
-| `renfe-largo` | `renfe_largo_recorrido.py --loop 30` | `/var/log/renfe-largo.log` |
+| Servicio | Script | Intervalo captura | Intervalo flush |
+|---|---|---|---|
+| `renfe-asturias` | `renfe_asturias_cercanias.py --loop 30` | 30s | 5 min |
+| `renfe-cadiz` | `renfe_cadiz_cercanias.py --loop 30` | 30s | 5 min |
+| `renfe-largo` | `renfe_largo_recorrido.py --loop 30` | 30s | 5 min |
 
 ### Comandos útiles
 
@@ -434,21 +535,24 @@ journalctl -u renfe-cadiz -f
 journalctl -u renfe-largo -f
 
 # Ver los últimos 50 registros
-journalctl -u renfe-asturias -n 50
+journalctl -u renfe-asturias -n 50 --no-pager
 
 # Reiniciar / Parar / Arrancar
 sudo systemctl restart renfe-asturias
 sudo systemctl stop renfe-cadiz
 sudo systemctl start renfe-largo
+
+# Ejecutar manualmente para depurar (muestra el traceback directamente)
+python3 /opt/renfe/renfe_cadiz_cercanias.py
 ```
 
 ---
 
-## 8. Consultar y exportar datos
+## 9. Consultar y exportar datos
 
 Los datos están en Azure SQL Database, accesible desde cualquier cliente SQL:
 
-- **SSMS / Azure Data Studio**: conectar al servidor y base de datos configurados en `azure_db.py`
+- **SSMS / Azure Data Studio**: conectar al servidor `sqljosedavid.database.windows.net`
 - **DBeaver**: mismo servidor con driver SQL Server
 - **Python/pandas**: ver más abajo
 
@@ -495,39 +599,37 @@ WHERE captured_at = (SELECT MAX(captured_at) FROM train_snapshots);
 ```python
 import pyodbc
 import pandas as pd
+from dotenv import load_dotenv
+import os
+
+load_dotenv(".env")
 
 conn_str = (
     "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=<servidor>.database.windows.net,1433;"
-    "DATABASE=<base_de_datos>;"
-    "UID=<usuario_sql>;"
-    "PWD=<password>;"
+    f"SERVER={os.environ['DB_SERVER']},1433;"
+    f"DATABASE={os.environ['DB_NAME']};"
+    f"UID={os.environ['DB_USER']};"
+    f"PWD={os.environ['DB_PASSWORD']};"
     "Encrypt=yes;TrustServerCertificate=no;"
 )
 conn = pyodbc.connect(conn_str)
 
-df_asturias = pd.read_sql(
-    "SELECT * FROM asturias_vehicle_snapshots WHERE speed IS NOT NULL", conn
-)
-df_cadiz = pd.read_sql(
-    "SELECT * FROM cadiz_vehicle_snapshots WHERE speed IS NOT NULL", conn
-)
-df_largo = pd.read_sql(
-    "SELECT * FROM train_snapshots", conn
-)
+df_asturias = pd.read_sql("SELECT * FROM asturias_vehicle_snapshots WHERE speed IS NOT NULL", conn)
+df_cadiz    = pd.read_sql("SELECT * FROM cadiz_vehicle_snapshots WHERE speed IS NOT NULL", conn)
+df_largo    = pd.read_sql("SELECT * FROM train_snapshots", conn)
 conn.close()
 ```
 
 ---
 
-## 9. Próximos pasos — Análisis y ML
+## 10. Próximos pasos — Análisis y ML
 
 ### Resumen disponible en cualquier momento
 
 ```bash
-python renfe_asturias_cercanias.py --summary      # Asturias
-python renfe_cadiz_cercanias.py --summary    # Cádiz
-python renfe_largo_recorrido.py --summary    # Largo recorrido
+python renfe_asturias_cercanias.py --summary
+python renfe_cadiz_cercanias.py --summary
+python renfe_largo_recorrido.py --summary
 ```
 
 Muestra: snapshots por línea, velocidad media/máxima, retrasos medios/máximos, rango temporal.

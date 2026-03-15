@@ -5,7 +5,7 @@ Líneas Cercanías Cádiz: C1 (Cádiz - S.Fernando - El Puerto - Jerez - Sevilla
 
 Uso:
   python renfe_cadiz_cercanias.py                  # Captura única
-  python renfe_cadiz_cercanias.py --loop 30        # Captura cada 30s
+  python renfe_cadiz_cercanias.py --loop 30        # Captura cada 30s, flush cada 5 min
   python renfe_cadiz_cercanias.py --summary        # Ver resumen
 """
 
@@ -37,6 +37,7 @@ ENDPOINTS = {
 }
 
 REQUEST_TIMEOUT = 15
+FLUSH_CYCLES = 10  # 10 ciclos × 30s = 5 minutos entre cada flush a la BD
 
 CADIZ_KEYWORDS = [
     "cádiz", "cadiz", "san fernando", "el puerto", "jerez",
@@ -110,7 +111,6 @@ def init_db(conn: pyodbc.Connection):
         """,
     ])
 
-    # Eliminar columna raw_json de tablas existentes (si aún existe)
     cursor = conn.cursor()
     for tbl in ["cadiz_vehicle_snapshots", "cadiz_trip_updates", "cadiz_service_alerts"]:
         cursor.execute(
@@ -163,7 +163,38 @@ def compute_speed_bearing(lat1, lon1, ts1, lat2, lon2, ts2):
 
 
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  FETCH Y PROCESAMIENTO                                       ║
+# ║  CACHÉS EN MEMORIA (evitan consultas DB entre flushes)       ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+# vehicle_id -> (lat, lon, event_ts, captured_at_iso)
+_position_cache: dict = {}
+
+# (vehicle_id, lat_redondeada, lon_redondeada) -> primera_captured_at_iso en esa posición
+_first_pos_cache: dict = {}
+
+# trip_ids vistos en la sesión actual
+_known_trips: set = set()
+
+
+def _get_previous_snapshot(vehicle_id):
+    """Devuelve el último snapshot conocido del vehículo (desde caché en memoria)."""
+    if not vehicle_id:
+        return None
+    return _position_cache.get(vehicle_id)
+
+
+def _get_first_position_captured_at(vehicle_id, lat, lon):
+    """
+    Devuelve el ISO timestamp de la primera vez que vimos este vehículo
+    en las coordenadas (lat, lon), desde el caché en memoria.
+    Compensa la baja frecuencia GPS de Renfe en cercanías.
+    """
+    key = (vehicle_id, round(lat, 4), round(lon, 4))
+    return _first_pos_cache.get(key)
+
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  FETCH Y PROCESAMIENTO (acumulan en batch, sin acceso a BD)  ║
 # ╚══════════════════════════════════════════════════════════════╝
 
 def fetch_json(url):
@@ -183,46 +214,8 @@ def extract_line_from_label(label):
     return label.split("-")[0] if "-" in label else None
 
 
-def _get_previous_snapshot(conn, vehicle_id):
-    if not vehicle_id:
-        return None
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT TOP 1 latitude, longitude, event_timestamp, captured_at
-        FROM cadiz_vehicle_snapshots
-        WHERE vehicle_id = ?
-        ORDER BY captured_at DESC
-    """, vehicle_id)
-    row = cursor.fetchone()
-    cursor.close()
-    return row
-
-
-def _get_first_position_captured_at(conn, vehicle_id, lat, lon):
-    """
-    Devuelve el Unix timestamp de la primera vez que capturamos a este vehículo
-    en las coordenadas (lat, lon). Compensa la baja frecuencia de actualización GPS
-    de Renfe en cercanías usando el tiempo real de permanencia en cada posición.
-    """
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT MIN(captured_at)
-        FROM cadiz_vehicle_snapshots
-        WHERE vehicle_id = ?
-          AND ABS(latitude  - ?) < 0.0001
-          AND ABS(longitude - ?) < 0.0001
-    """, vehicle_id, lat, lon)
-    row = cursor.fetchone()
-    cursor.close()
-    if row and row[0]:
-        try:
-            return datetime.fromisoformat(row[0]).timestamp()
-        except Exception:
-            return None
-    return None
-
-
-def process_vehicle_positions(conn):
+def process_vehicle_positions() -> list:
+    """Captura posiciones, actualiza cachés y devuelve filas (sin insertar en BD)."""
     data = fetch_json(ENDPOINTS["vehicle_positions"])
     feed_ts = data.get("header", {}).get("timestamp")
     now = datetime.now(timezone.utc).isoformat()
@@ -241,16 +234,36 @@ def process_vehicle_positions(conn):
         event_ts = v.get("timestamp")
 
         speed, bearing = None, None
-        prev = _get_previous_snapshot(conn, vehicle_id)
+        prev = _get_previous_snapshot(vehicle_id)
         if prev:
             prev_lat, prev_lon, _, _prev_captured_at = prev
             pos_changed = (abs(lat - prev_lat) > 0.0001 or abs(lon - prev_lon) > 0.0001)
             if pos_changed:
-                ts1 = _get_first_position_captured_at(conn, vehicle_id, prev_lat, prev_lon)
-                if ts1 is None:
-                    ts1 = datetime.fromisoformat(_prev_captured_at).timestamp()
+                first_at_iso = _get_first_position_captured_at(vehicle_id, prev_lat, prev_lon)
+                if first_at_iso is not None:
+                    try:
+                        ts1 = datetime.fromisoformat(first_at_iso).timestamp()
+                    except Exception:
+                        ts1 = None
+                else:
+                    try:
+                        ts1 = datetime.fromisoformat(_prev_captured_at).timestamp()
+                    except Exception:
+                        ts1 = None
                 ts2 = datetime.fromisoformat(now).timestamp()
                 speed, bearing = compute_speed_bearing(prev_lat, prev_lon, ts1, lat, lon, ts2)
+
+                # Registrar primera vez en la nueva posición
+                new_key = (vehicle_id, round(lat, 4), round(lon, 4))
+                if new_key not in _first_pos_cache:
+                    _first_pos_cache[new_key] = now
+
+        # Registrar primera vez que vemos este vehículo en esta posición
+        if vehicle_id:
+            pos_key = (vehicle_id, round(lat, 4), round(lon, 4))
+            if pos_key not in _first_pos_cache:
+                _first_pos_cache[pos_key] = now
+            _position_cache[vehicle_id] = (lat, lon, event_ts, now)
 
         label = veh.get("label", "")
         rows.append((
@@ -263,21 +276,13 @@ def process_vehicle_positions(conn):
             v.get("stopId"), event_ts,
         ))
 
-    if rows:
-        cursor = conn.cursor()
-        cursor.executemany("""
-            INSERT INTO cadiz_vehicle_snapshots
-            (captured_at, feed_timestamp, trip_id, vehicle_id, vehicle_label,
-             line, latitude, longitude, bearing, speed, current_status,
-             stop_id, event_timestamp)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, rows)
-        conn.commit()
-        cursor.close()
-    return len(rows)
+    return rows
 
 
-def process_trip_updates(conn, known_trip_ids):
+def process_trip_updates() -> list:
+    """Captura trip updates filtrando por _known_trips y devuelve filas (sin insertar)."""
+    if not _known_trips:
+        return []
     data = fetch_json(ENDPOINTS["trip_updates"])
     feed_ts = data.get("header", {}).get("timestamp")
     now = datetime.now(timezone.utc).isoformat()
@@ -287,7 +292,7 @@ def process_trip_updates(conn, known_trip_ids):
         tu = entity.get("tripUpdate", {})
         trip = tu.get("trip", {})
         trip_id = trip.get("tripId")
-        if trip_id not in known_trip_ids:
+        if trip_id not in _known_trips:
             continue
 
         schedule_rel = trip.get("scheduleRelationship")
@@ -312,20 +317,11 @@ def process_trip_updates(conn, known_trip_ids):
                     arrival.get("delay"), departure.get("delay"),
                 ))
 
-    if rows:
-        cursor = conn.cursor()
-        cursor.executemany("""
-            INSERT INTO cadiz_trip_updates
-            (captured_at, feed_timestamp, trip_id, line, schedule_relationship,
-             stop_sequence, stop_id, arrival_delay, departure_delay)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, rows)
-        conn.commit()
-        cursor.close()
-    return len(rows)
+    return rows
 
 
-def process_service_alerts(conn):
+def process_service_alerts() -> list:
+    """Captura alertas de Cádiz y devuelve filas (sin insertar)."""
     data = fetch_json(ENDPOINTS["service_alerts"])
     feed_ts = data.get("header", {}).get("timestamp")
     now = datetime.now(timezone.utc).isoformat()
@@ -343,53 +339,85 @@ def process_service_alerts(conn):
                      alert.get("cause"), alert.get("effect"),
                      header, description))
 
-    if rows:
-        cursor = conn.cursor()
+    return rows
+
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  FLUSH A BASE DE DATOS                                       ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+def flush_batch(conn, batch: dict):
+    """Inserta en Azure SQL todas las filas acumuladas en el batch y lo vacía."""
+    cursor = conn.cursor()
+
+    if batch["snapshots"]:
+        cursor.executemany("""
+            INSERT INTO cadiz_vehicle_snapshots
+            (captured_at, feed_timestamp, trip_id, vehicle_id, vehicle_label,
+             line, latitude, longitude, bearing, speed, current_status,
+             stop_id, event_timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, batch["snapshots"])
+
+    if batch["trip_updates"]:
+        cursor.executemany("""
+            INSERT INTO cadiz_trip_updates
+            (captured_at, feed_timestamp, trip_id, line, schedule_relationship,
+             stop_sequence, stop_id, arrival_delay, departure_delay)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, batch["trip_updates"])
+
+    if batch["alerts"]:
         cursor.executemany("""
             INSERT INTO cadiz_service_alerts
             (captured_at, feed_timestamp, alert_id, cause, effect,
              header_text, description)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, rows)
-        conn.commit()
-        cursor.close()
-    return len(rows)
+        """, batch["alerts"])
+
+    conn.commit()
+    cursor.close()
+
+    print(
+        f"  → Flush BD: {len(batch['snapshots'])} posiciones | "
+        f"{len(batch['trip_updates'])} trip updates | "
+        f"{len(batch['alerts'])} alertas"
+    )
+    batch["snapshots"].clear()
+    batch["trip_updates"].clear()
+    batch["alerts"].clear()
 
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║  CAPTURA PRINCIPAL                                           ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-def capture_once(conn):
+def capture_once(batch: dict):
+    """Captura un ciclo y acumula las filas en batch (sin acceder a la BD)."""
     stats = {"positions": 0, "trip_updates": 0, "alerts": 0, "errors": []}
     now = datetime.now()
 
     try:
-        stats["positions"] = process_vehicle_positions(conn)
+        rows = process_vehicle_positions()
+        batch["snapshots"].extend(rows)
+        stats["positions"] = len(rows)
+        for row in rows:
+            if row[2]:  # trip_id
+                _known_trips.add(row[2])
     except Exception as e:
         stats["errors"].append(f"vehicle_positions: {e}")
 
-    known_trips = set()
     try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT DISTINCT trip_id FROM cadiz_vehicle_snapshots
-            WHERE trip_id IS NOT NULL
-              AND CAST(captured_at AS DATE) = CAST(GETUTCDATE() AS DATE)
-        """)
-        known_trips = {r[0] for r in cursor.fetchall()}
-        cursor.close()
+        rows = process_trip_updates()
+        batch["trip_updates"].extend(rows)
+        stats["trip_updates"] = len(rows)
     except Exception as e:
-        stats["errors"].append(f"known_trips: {e}")
-
-    if known_trips:
-        try:
-            stats["trip_updates"] = process_trip_updates(conn, known_trips)
-        except Exception as e:
-            stats["errors"].append(f"trip_updates: {e}")
+        stats["errors"].append(f"trip_updates: {e}")
 
     try:
-        stats["alerts"] = process_service_alerts(conn)
+        rows = process_service_alerts()
+        batch["alerts"].extend(rows)
+        stats["alerts"] = len(rows)
     except Exception as e:
         stats["errors"].append(f"service_alerts: {e}")
 
@@ -456,29 +484,54 @@ def main():
     )
     parser.add_argument("--loop", type=int, default=0)
     parser.add_argument("--summary", action="store_true")
+    parser.add_argument("--flush-every", type=int, default=FLUSH_CYCLES,
+                        help="Flush a BD cada N ciclos (default: 10 → 5 min con --loop 30)")
     args = parser.parse_args()
 
     conn = get_conn()
     init_db(conn)
+    conn.close()
 
     if args.summary:
+        conn = get_conn()
         show_summary(conn)
         conn.close()
         return
 
     if args.loop > 0:
-        print(f"Modo loop: captura cada {args.loop}s (Ctrl+C para parar)\n")
+        flush_every = args.flush_every
+        print(
+            f"Modo loop: captura cada {args.loop}s, "
+            f"flush a BD cada {flush_every * args.loop}s "
+            f"(Ctrl+C para parar)\n"
+        )
+        batch = {"snapshots": [], "trip_updates": [], "alerts": []}
+        cycle = 0
         try:
             while True:
-                capture_once(conn)
+                capture_once(batch)
+                cycle += 1
+                if cycle >= flush_every:
+                    conn = get_conn()
+                    flush_batch(conn, batch)
+                    conn.close()
+                    cycle = 0
                 time.sleep(args.loop)
         except KeyboardInterrupt:
-            print("\nDetenido.")
+            print("\nDetenido. Volcando datos pendientes...")
+            if any(batch[k] for k in batch):
+                conn = get_conn()
+                flush_batch(conn, batch)
+                conn.close()
+            conn = get_conn()
             show_summary(conn)
+            conn.close()
     else:
-        capture_once(conn)
-
-    conn.close()
+        batch = {"snapshots": [], "trip_updates": [], "alerts": []}
+        capture_once(batch)
+        conn = get_conn()
+        flush_batch(conn, batch)
+        conn.close()
 
 
 if __name__ == "__main__":

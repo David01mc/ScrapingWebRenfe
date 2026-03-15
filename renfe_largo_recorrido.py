@@ -10,7 +10,7 @@ El feed se actualiza cada 15 segundos. Capturamos cada 30s.
 
 Uso:
   python renfe_largo_recorrido.py                  # Captura única
-  python renfe_largo_recorrido.py --loop 30        # Captura cada 30s
+  python renfe_largo_recorrido.py --loop 30        # Captura cada 30s, flush cada 5 min
   python renfe_largo_recorrido.py --summary        # Ver resumen
   python renfe_largo_recorrido.py --init-stations  # Cargar catálogo de estaciones (una vez)
 """
@@ -38,6 +38,7 @@ ENDPOINTS = {
 
 REQUEST_TIMEOUT = 15
 CADIZ_MADRID_KEYWORDS = ["ádiz", "adiz"]
+FLUSH_CYCLES = 10  # 10 ciclos × 30s = 5 minutos entre cada flush a la BD
 
 TIPOS_TREN = {
     1:  "AVE",
@@ -142,7 +143,6 @@ def init_db(conn: pyodbc.Connection):
         """,
     ])
 
-    # Eliminar columna raw_json de tablas existentes (si aún existe)
     cursor = conn.cursor()
     for tbl in ["train_snapshots", "train_itineraries", "stations"]:
         cursor.execute(
@@ -195,33 +195,18 @@ def compute_speed_bearing(lat1, lon1, ts1, lat2, lon2, ts2):
 
 
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  FETCH DE DATOS                                              ║
+# ║  CACHÉ EN MEMORIA (evita consultas DB entre flushes)         ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-def fetch_json(url):
-    resp = requests.get(url, timeout=REQUEST_TIMEOUT)
-    resp.raise_for_status()
-    return resp.json()
+# cod_comercial -> (lat, lon, gps_timestamp, captured_at_iso)
+_position_cache: dict = {}
 
 
-def is_cadiz_madrid(tren: dict) -> bool:
-    corridor = (tren.get("desCorridor") or "").lower()
-    return any(kw in corridor for kw in CADIZ_MADRID_KEYWORDS)
-
-
-def _get_previous_snapshot(conn, cod_comercial):
+def _get_previous_snapshot(cod_comercial):
+    """Devuelve el último snapshot conocido del tren (desde caché en memoria)."""
     if not cod_comercial:
         return None
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT TOP 1 latitude, longitude, gps_timestamp, captured_at
-        FROM train_snapshots
-        WHERE cod_comercial = ?
-        ORDER BY gps_timestamp DESC
-    """, cod_comercial)
-    row = cursor.fetchone()
-    cursor.close()
-    return row
+    return _position_cache.get(cod_comercial)
 
 
 def _resolve_timestamps(prev_gps_ts, prev_captured_at, curr_gps_ts, curr_captured_at):
@@ -237,11 +222,26 @@ def _resolve_timestamps(prev_gps_ts, prev_captured_at, curr_gps_ts, curr_capture
 
 
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  PROCESAMIENTO                                               ║
+# ║  FETCH DE DATOS                                              ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-def process_flota(conn) -> int:
-    """Captura posiciones y retrasos de trenes Cádiz ↔ Madrid."""
+def fetch_json(url):
+    resp = requests.get(url, timeout=REQUEST_TIMEOUT)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def is_cadiz_madrid(tren: dict) -> bool:
+    corridor = (tren.get("desCorridor") or "").lower()
+    return any(kw in corridor for kw in CADIZ_MADRID_KEYWORDS)
+
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  PROCESAMIENTO (acumulan en batch, sin acceso a BD)          ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+def process_flota() -> list:
+    """Captura posiciones y retrasos de trenes Cádiz ↔ Madrid. Devuelve filas sin insertar."""
     data = fetch_json(ENDPOINTS["flota"])
     feed_ts = data.get("fechaActualizacion")
     now = datetime.now(timezone.utc).isoformat()
@@ -257,11 +257,15 @@ def process_flota(conn) -> int:
         cod_product = tren.get("codProduct")
 
         speed, bearing = None, None
-        prev = _get_previous_snapshot(conn, cod)
+        prev = _get_previous_snapshot(cod)
         if prev:
             prev_lat, prev_lon, prev_gps_ts, prev_captured_at = prev
             ts1, ts2 = _resolve_timestamps(prev_gps_ts, prev_captured_at, gps_ts, now)
             speed, bearing = compute_speed_bearing(prev_lat, prev_lon, ts1, lat, lon, ts2)
+
+        # Actualizar caché
+        if cod:
+            _position_cache[cod] = (lat, lon, gps_ts, now)
 
         retraso_raw = tren.get("ultRetraso", "0")
         try:
@@ -285,26 +289,13 @@ def process_flota(conn) -> int:
             gps_ts,
         ))
 
-    if rows:
-        cursor = conn.cursor()
-        cursor.executemany("""
-            INSERT INTO train_snapshots
-            (captured_at, feed_timestamp, cod_comercial, cod_product, tipo_tren,
-             des_corridor, cod_origen, cod_destino, latitude, longitude,
-             speed, bearing, ult_retraso, cod_est_ant, cod_est_sig,
-             hora_llegada_sig_est, plataforma, material, accesible,
-             gps_timestamp)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, rows)
-        conn.commit()
-        cursor.close()
-    return len(rows)
+    return rows
 
 
-def process_itinerarios(conn, trenes_activos: set) -> int:
-    """Captura itinerarios completos de trenes activos."""
+def process_itinerarios(trenes_activos: set) -> list:
+    """Captura itinerarios completos de trenes activos. Devuelve filas sin insertar."""
     if not trenes_activos:
-        return 0
+        return []
 
     data = fetch_json(ENDPOINTS["itinerarios"])
     now = datetime.now(timezone.utc).isoformat()
@@ -329,17 +320,7 @@ def process_itinerarios(conn, trenes_activos: set) -> int:
                 lat, lon,
             ))
 
-    if rows:
-        cursor = conn.cursor()
-        cursor.executemany("""
-            INSERT INTO train_itineraries
-            (captured_at, cod_comercial, stop_order, station_code,
-             hora_prog, latitude, longitude)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, rows)
-        conn.commit()
-        cursor.close()
-    return len(rows)
+    return rows
 
 
 def init_stations(conn) -> int:
@@ -365,7 +346,6 @@ def init_stations(conn) -> int:
 
     if rows:
         cursor = conn.cursor()
-        # Limpiamos y recargamos para tener el catálogo actualizado
         cursor.execute("DELETE FROM stations")
         cursor.executemany("""
             INSERT INTO stations
@@ -381,33 +361,65 @@ def init_stations(conn) -> int:
 
 
 # ╔══════════════════════════════════════════════════════════════╗
+# ║  FLUSH A BASE DE DATOS                                       ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+def flush_batch(conn, batch: dict):
+    """Inserta en Azure SQL todas las filas acumuladas en el batch y lo vacía."""
+    cursor = conn.cursor()
+
+    if batch["snapshots"]:
+        cursor.executemany("""
+            INSERT INTO train_snapshots
+            (captured_at, feed_timestamp, cod_comercial, cod_product, tipo_tren,
+             des_corridor, cod_origen, cod_destino, latitude, longitude,
+             speed, bearing, ult_retraso, cod_est_ant, cod_est_sig,
+             hora_llegada_sig_est, plataforma, material, accesible,
+             gps_timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, batch["snapshots"])
+
+    if batch["itineraries"]:
+        cursor.executemany("""
+            INSERT INTO train_itineraries
+            (captured_at, cod_comercial, stop_order, station_code,
+             hora_prog, latitude, longitude)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, batch["itineraries"])
+
+    conn.commit()
+    cursor.close()
+
+    print(
+        f"  → Flush BD: {len(batch['snapshots'])} snapshots | "
+        f"{len(batch['itineraries'])} paradas"
+    )
+    batch["snapshots"].clear()
+    batch["itineraries"].clear()
+
+
+# ╔══════════════════════════════════════════════════════════════╗
 # ║  CAPTURA PRINCIPAL                                           ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-def capture_once(conn) -> dict:
+def capture_once(batch: dict) -> dict:
+    """Captura un ciclo y acumula las filas en batch (sin acceder a la BD)."""
     stats = {"trenes": 0, "paradas": 0, "errors": []}
     now = datetime.now()
 
+    trenes_activos = set()
     try:
-        stats["trenes"] = process_flota(conn)
+        rows = process_flota()
+        batch["snapshots"].extend(rows)
+        stats["trenes"] = len(rows)
+        trenes_activos = {row[2] for row in rows if row[2]}  # cod_comercial
     except Exception as e:
         stats["errors"].append(f"flota: {e}")
 
-    trenes_activos = set()
     try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT DISTINCT cod_comercial FROM train_snapshots
-            WHERE cod_comercial IS NOT NULL
-              AND CAST(captured_at AS DATE) = CAST(GETUTCDATE() AS DATE)
-        """)
-        trenes_activos = {r[0] for r in cursor.fetchall()}
-        cursor.close()
-    except Exception as e:
-        stats["errors"].append(f"trenes_activos: {e}")
-
-    try:
-        stats["paradas"] = process_itinerarios(conn, trenes_activos)
+        rows = process_itinerarios(trenes_activos)
+        batch["itineraries"].extend(rows)
+        stats["paradas"] = len(rows)
     except Exception as e:
         stats["errors"].append(f"itinerarios: {e}")
 
@@ -503,32 +515,59 @@ def main():
     parser.add_argument("--summary", action="store_true")
     parser.add_argument("--init-stations", action="store_true",
                         help="Cargar catálogo de estaciones (ejecutar una vez)")
+    parser.add_argument("--flush-every", type=int, default=FLUSH_CYCLES,
+                        help="Flush a BD cada N ciclos (default: 10 → 5 min con --loop 30)")
     args = parser.parse_args()
 
     conn = get_conn()
     init_db(conn)
+    conn.close()
 
     if args.init_stations:
+        conn = get_conn()
         init_stations(conn)
+        conn.close()
 
     if args.summary:
+        conn = get_conn()
         show_summary(conn)
         conn.close()
         return
 
     if args.loop > 0:
-        print(f"Modo loop: captura cada {args.loop}s (Ctrl+C para parar)\n")
+        flush_every = args.flush_every
+        print(
+            f"Modo loop: captura cada {args.loop}s, "
+            f"flush a BD cada {flush_every * args.loop}s "
+            f"(Ctrl+C para parar)\n"
+        )
+        batch = {"snapshots": [], "itineraries": []}
+        cycle = 0
         try:
             while True:
-                capture_once(conn)
+                capture_once(batch)
+                cycle += 1
+                if cycle >= flush_every:
+                    conn = get_conn()
+                    flush_batch(conn, batch)
+                    conn.close()
+                    cycle = 0
                 time.sleep(args.loop)
         except KeyboardInterrupt:
-            print("\nDetenido.")
+            print("\nDetenido. Volcando datos pendientes...")
+            if any(batch[k] for k in batch):
+                conn = get_conn()
+                flush_batch(conn, batch)
+                conn.close()
+            conn = get_conn()
             show_summary(conn)
+            conn.close()
     else:
-        capture_once(conn)
-
-    conn.close()
+        batch = {"snapshots": [], "itineraries": []}
+        capture_once(batch)
+        conn = get_conn()
+        flush_batch(conn, batch)
+        conn.close()
 
 
 if __name__ == "__main__":
