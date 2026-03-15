@@ -1,0 +1,23 @@
+[Unit]
+Description=Renfe Largo Recorrido Madrid-Cádiz — captura cada 30s
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=renfe
+WorkingDirectory=/opt/renfe
+ExecStart=/opt/renfe/venv/bin/python /opt/renfe/renfe_largo_recorrido.py \
+    --db /opt/renfe/renfe_largo_recorrido.db \
+    --loop 30
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=renfe-largo-recorrido
+
+[Install]
+WantedBy=multi-user.target

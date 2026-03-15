@@ -1,0 +1,25 @@
+[Unit]
+Description=Renfe Cercanías Asturias — captura GTFS-RT cada 30s
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=renfe
+WorkingDirectory=/opt/renfe
+ExecStart=/opt/renfe/venv/bin/python /opt/renfe/renfe_asturias.py \
+    --db /opt/renfe/renfe_asturias.db \
+    --loop 30
+Restart=on-failure
+RestartSec=10
+# Reintentar hasta 5 veces antes de rendirse
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=renfe-asturias
+
+[Install]
+WantedBy=multi-user.target

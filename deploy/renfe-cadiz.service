@@ -1,0 +1,23 @@
+[Unit]
+Description=Renfe Cercanías Cádiz — captura GTFS-RT cada 30s
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=renfe
+WorkingDirectory=/opt/renfe
+ExecStart=/opt/renfe/venv/bin/python /opt/renfe/renfe_cadiz.py \
+    --db /opt/renfe/renfe_cadiz.db \
+    --loop 30
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=renfe-cadiz
+
+[Install]
+WantedBy=multi-user.target
