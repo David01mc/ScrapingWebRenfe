@@ -26,15 +26,17 @@ Se capturan tres tipos de datos:
 
 Todo se ejecuta de forma autónoma en una **VM Azure B1s** (Ubuntu 22.04) sin necesidad de que el ordenador personal esté encendido. Los datos se almacenan centralizadamente en **Azure SQL Database**, accesible desde cualquier cliente SQL (SSMS, Azure Data Studio, DBeaver, pandas...).
 
-### Sistema de captura en batch
+### Sistema de captura optimizado
 
-Para reducir el consumo de vCore-segundos del tier gratuito de Azure SQL, los scripts **no escriben en la BD en cada ciclo**. En su lugar:
+Para reducir al máximo el consumo de vCore-segundos del tier gratuito de Azure SQL:
 
-- Capturan datos cada **30 segundos** y los acumulan en memoria
-- Cada **5 minutos** (10 ciclos) abren una conexión, hacen un insert masivo y la cierran
-- Entre flushes, la BD permanece inactiva y puede **auto-pausarse** (ahorro ~80% de vCore-segundos)
-
-La velocidad y bearing se calculan usando un **caché en memoria** de la última posición conocida por vehículo, sin necesidad de consultar la BD entre flushes.
+| Optimización | Detalle |
+|---|---|
+| **Script unificado** | Un solo proceso (`renfe_capture.py`) gestiona las 3 fuentes — 1 conexión por flush en lugar de 3 |
+| **Flush cada 20 min** | 40 ciclos × 30s — la BD permanece inactiva y puede auto-pausarse entre flushes |
+| **Pausa nocturna** | Sin capturas entre las 23:00 y las 06:00 UTC — trenes sin servicio de madrugada |
+| **Itinerarios sin duplicados** | El itinerario de cada tren se guarda una sola vez por día (~90% menos filas en `train_itineraries`) |
+| **Caché en memoria** | Velocidad y bearing calculados sin consultar la BD — los cachés viven en RAM |
 
 ### Infraestructura
 
@@ -93,83 +95,40 @@ El JSON de posiciones tiene esta estructura:
 
 ---
 
-## 3. Los tres scripts de captura
+## 3. Scripts
 
-### 3.1 `renfe_asturias_cercanias.py` — Cercanías Asturias
+### 3.1 `renfe_capture.py` — Script unificado (producción)
 
-Captura datos de los trenes de Cercanías que circulan por Asturias.
-
-**Filtrado:** Bounding box GPS:
-```
-lat: 43.0 – 43.7
-lon: -7.0 – -4.5
-```
-
-**Tablas en Azure SQL:** `asturias_vehicle_snapshots`, `asturias_trip_updates`, `asturias_service_alerts`
+Captura las tres fuentes en un único proceso: Cercanías Asturias, Cercanías Cádiz y Largo Recorrido Cádiz ↔ Madrid.
 
 **Uso:**
 ```bash
-python renfe_asturias_cercanias.py               # Captura única
-python renfe_asturias_cercanias.py --loop 30     # Captura cada 30s, flush a BD cada 5 min
-python renfe_asturias_cercanias.py --summary     # Ver resumen estadístico
-python renfe_asturias_cercanias.py --loop 30 --flush-every 20  # Flush cada 10 min
+python renfe_capture.py                          # Captura única
+python renfe_capture.py --loop 30               # Loop: captura 30s, flush 20 min, pausa nocturna
+python renfe_capture.py --summary               # Resumen de todas las tablas
+python renfe_capture.py --init-stations         # Cargar catálogo de estaciones (solo 1ª vez)
+python renfe_capture.py --loop 30 --flush-every 20   # Flush cada 10 min
 ```
+
+**Fuentes de datos:**
+
+| Fuente | Filtrado | Tablas |
+|---|---|---|
+| Cercanías Asturias | Bounding box `lat 43.0–43.7 / lon -7.0–-4.5` | `asturias_vehicle_snapshots`, `asturias_trip_updates`, `asturias_service_alerts` |
+| Cercanías Cádiz | Bounding box `lat 36.3–37.5 / lon -6.5–-5.7` | `cadiz_vehicle_snapshots`, `cadiz_trip_updates`, `cadiz_service_alerts` |
+| Largo Recorrido | `desCorridor` contiene `"ádiz"` o `"adiz"` | `train_snapshots`, `train_itineraries`, `stations` |
 
 ---
 
-### 3.2 `renfe_cadiz_cercanias.py` — Cercanías Cádiz
+### 3.2 Scripts individuales (desarrollo / depuración)
 
-Idéntico en estructura al script de Asturias pero filtrado para la red de Cercanías de Cádiz (línea C1: Cádiz → San Fernando → El Puerto → Jerez → Sevilla).
-
-**Filtrado:** Bounding box GPS:
-```
-lat: 36.3 – 37.5
-lon: -6.5 – -5.7
-```
-
-**Tablas en Azure SQL:** `cadiz_vehicle_snapshots`, `cadiz_trip_updates`, `cadiz_service_alerts`
-
-**Uso:**
-```bash
-python renfe_cadiz_cercanias.py               # Captura única
-python renfe_cadiz_cercanias.py --loop 30     # Captura cada 30s, flush a BD cada 5 min
-python renfe_cadiz_cercanias.py --summary     # Ver resumen estadístico
-```
+Los scripts individuales `renfe_asturias_cercanias.py`, `renfe_cadiz_cercanias.py` y `renfe_largo_recorrido.py` se mantienen para pruebas locales pero **no se usan en producción**. El servicio systemd en la VM ejecuta únicamente `renfe_capture.py`.
 
 ---
 
-### 3.3 `renfe_largo_recorrido.py` — Largo Recorrido Cádiz ↔ Madrid
+### 3.3 `azure_db.py` — Módulo de conexión compartido
 
-Captura datos de los trenes de largo recorrido en el corredor Cádiz ↔ Madrid (AVE, Alvia, Intercity, etc.).
-
-**Filtrado:** Trenes cuyo campo `desCorridor` contiene `"ádiz"` o `"adiz"` (cubre Cádiz en cualquier codificación).
-
-**Tablas en Azure SQL:** `train_snapshots`, `train_itineraries`, `stations`
-
-**Datos capturados por tren:**
-- Posición GPS en tiempo real
-- Retraso actual en minutos (`ult_retraso`)
-- Estación anterior y siguiente (con nombre legible cruzado con `stations`)
-- Hora estimada de llegada a la siguiente estación
-- Tipo de tren (AVE, Alvia, Intercity, MD...)
-- Material rodante
-- Itinerario completo con todas las paradas y horarios programados
-
-**Uso:**
-```bash
-python renfe_largo_recorrido.py --init-stations  # Solo la PRIMERA vez (carga estaciones)
-python renfe_largo_recorrido.py                  # Captura única
-python renfe_largo_recorrido.py --loop 30        # Captura cada 30s, flush a BD cada 5 min
-python renfe_largo_recorrido.py --summary        # Ver resumen estadístico
-```
-
-> `--init-stations` descarga el catálogo completo de estaciones Renfe (~1000 estaciones con nombre, coordenadas y provincia) y lo guarda en la tabla `stations`. Solo es necesario ejecutarlo una vez.
-
----
-
-### 3.4 `azure_db.py` — Módulo de conexión compartido
-
-Módulo importado por los tres scripts. Lee las credenciales del fichero `.env` y centraliza la conexión a Azure SQL.
+Lee las credenciales del fichero `.env` y centraliza la conexión a Azure SQL.
 
 ```python
 get_conn()              # Devuelve una conexión pyodbc activa
@@ -378,9 +337,7 @@ Desde la raíz del proyecto en tu terminal local:
 
 ```bash
 scp -i deploy/RenfeKey.pem \
-    renfe_asturias_cercanias.py \
-    renfe_cadiz_cercanias.py \
-    renfe_largo_recorrido.py \
+    renfe_capture.py \
     azure_db.py \
     .env \
     deploy/setup.sh \
@@ -451,45 +408,35 @@ Los tres servicios deben aparecer como `active (running)`.
 ### Paso 9 — Comprobar los logs
 
 ```bash
-journalctl -u renfe-asturias -f
+journalctl -u renfe-capture -f
 ```
 
-Deberías ver algo así cada 30 segundos:
+Deberías ver algo así:
 
 ```
-Tablas e índices verificados (Azure SQL — Asturias).
-Modo loop: captura cada 30s, flush a BD cada 300s (Ctrl+C para parar)
+Tablas e índices verificados (Azure SQL — Unificado).
+Captura cada 30s | Flush cada 1200s | Pausa nocturna 23:00–06:00 UTC
 
-[2026-03-15 21:30:00] Posiciones: 8 | Trip Updates: 12 | Alertas: 0 | 1.3s
-[2026-03-15 21:30:30] Posiciones: 8 | Trip Updates: 12 | Alertas: 0 | 1.2s
+[2026-03-15 21:30:00] AST 8pos/12upd  CDZ 5pos/8upd  LR 3snap/0itin  2.1s
+[2026-03-15 21:30:30] AST 8pos/11upd  CDZ 5pos/7upd  LR 3snap/0itin  1.9s
 ...
-  → Flush BD: 80 posiciones | 120 trip updates | 0 alertas    ← cada 5 min
+  → Flush BD | AST: 320pos/480upd | CDZ: 200pos/320upd | LR: 120snap/45itin | total 1485 filas
 ```
+
+El flush aparece cada 20 minutos. Los itinerarios (`itin`) solo aparecen la primera vez que se ve cada tren en el día.
 
 ---
 
 ### Actualizar scripts en el futuro
 
-Cuando modifiques un script localmente:
-
-```bash
-# 1. Subir desde tu PC
-scp -i deploy/RenfeKey.pem renfe_asturias_cercanias.py azureuserRenfe@68.221.175.21:/home/azureuserRenfe/
-
-# 2. En la VM: copiar y reiniciar
-sudo cp /home/azureuserRenfe/renfe_asturias_cercanias.py /opt/renfe/
-sudo systemctl restart renfe-asturias
-```
-
-Para subir todos los scripts a la vez:
-
 ```bash
 # Desde tu PC
-scp -i deploy/RenfeKey.pem renfe_asturias_cercanias.py renfe_cadiz_cercanias.py renfe_largo_recorrido.py azure_db.py azureuserRenfe@68.221.175.21:/home/azureuserRenfe/
+scp -i deploy/RenfeKey.pem renfe_capture.py azure_db.py azureuserRenfe@68.221.175.21:/home/azureuserRenfe/
 
 # En la VM
-sudo cp /home/azureuserRenfe/*.py /opt/renfe/
-sudo systemctl restart renfe-asturias renfe-cadiz renfe-largo
+sudo cp /home/azureuserRenfe/renfe_capture.py /opt/renfe/
+sudo cp /home/azureuserRenfe/azure_db.py /opt/renfe/
+sudo systemctl restart renfe-capture
 ```
 
 ---
@@ -513,37 +460,36 @@ icacls "deploy\RenfeKey.pem" /grant:r "${env:USERNAME}:(R)"
 
 ---
 
-## 8. Gestión de los servicios en la VM
+## 8. Gestión del servicio en la VM
 
-Los 3 scripts corren como servicios systemd y arrancan automáticamente si la VM se reinicia.
+Un único servicio systemd gestiona las tres fuentes y arranca automáticamente si la VM se reinicia.
 
-| Servicio | Script | Intervalo captura | Intervalo flush |
-|---|---|---|---|
-| `renfe-asturias` | `renfe_asturias_cercanias.py --loop 30` | 30s | 5 min |
-| `renfe-cadiz` | `renfe_cadiz_cercanias.py --loop 30` | 30s | 5 min |
-| `renfe-largo` | `renfe_largo_recorrido.py --loop 30` | 30s | 5 min |
+| Servicio | Script | Captura | Flush | Pausa nocturna |
+|---|---|---|---|---|
+| `renfe-capture` | `renfe_capture.py --loop 30` | 30s | 20 min | 23:00–06:00 UTC |
 
 ### Comandos útiles
 
 ```bash
-# Estado de todos los servicios
-sudo systemctl status renfe-asturias renfe-cadiz renfe-largo
+# Estado del servicio
+sudo systemctl status renfe-capture
 
 # Ver logs en tiempo real
-journalctl -u renfe-asturias -f
-journalctl -u renfe-cadiz -f
-journalctl -u renfe-largo -f
+journalctl -u renfe-capture -f
 
 # Ver los últimos 50 registros
-journalctl -u renfe-asturias -n 50 --no-pager
+journalctl -u renfe-capture -n 50 --no-pager
 
 # Reiniciar / Parar / Arrancar
-sudo systemctl restart renfe-asturias
-sudo systemctl stop renfe-cadiz
-sudo systemctl start renfe-largo
+sudo systemctl restart renfe-capture
+sudo systemctl stop renfe-capture
+sudo systemctl start renfe-capture
 
 # Ejecutar manualmente para depurar (muestra el traceback directamente)
-python3 /opt/renfe/renfe_cadiz_cercanias.py
+python3 /opt/renfe/renfe_capture.py
+
+# Ver resumen de datos capturados
+python3 /opt/renfe/renfe_capture.py --summary
 ```
 
 ---

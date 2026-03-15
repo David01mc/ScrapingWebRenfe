@@ -45,20 +45,27 @@ pip3 install --quiet requests pyodbc python-dotenv
 # ── 5. Copiar scripts ─────────────────────────────────────────────────────────
 echo "[5/6] Copiando scripts a $APP_DIR..."
 mkdir -p "$APP_DIR"
-cp /home/$VM_USER/renfe_asturias_cercanias.py "$APP_DIR/"
-cp /home/$VM_USER/renfe_cadiz_cercanias.py    "$APP_DIR/"
-cp /home/$VM_USER/renfe_largo_recorrido.py    "$APP_DIR/"
-cp /home/$VM_USER/azure_db.py                 "$APP_DIR/"
-cp /home/$VM_USER/.env                        "$APP_DIR/.env"
-chmod 600 "$APP_DIR/.env"
+cp /home/$VM_USER/renfe_capture.py "$APP_DIR/"
+cp /home/$VM_USER/azure_db.py      "$APP_DIR/"
+cp /home/$VM_USER/.env             "$APP_DIR/.env"
+chmod 644 "$APP_DIR/.env"
 chown -R $VM_USER:$VM_USER "$APP_DIR"
 
-# ── 6. Crear e iniciar servicios systemd ─────────────────────────────────────
-echo "[6/6] Configurando servicios systemd..."
+# Deshabilitar servicios antiguos si existieran
+for svc in renfe-asturias renfe-cadiz renfe-largo; do
+    if systemctl is-active --quiet "$svc" 2>/dev/null; then
+        echo "  Deteniendo servicio antiguo: $svc"
+        systemctl stop "$svc" || true
+        systemctl disable "$svc" || true
+    fi
+done
 
-cat > /etc/systemd/system/renfe-asturias.service << EOF
+# ── 6. Crear e iniciar servicio systemd unificado ────────────────────────────
+echo "[6/6] Configurando servicio systemd renfe-capture..."
+
+cat > /etc/systemd/system/renfe-capture.service << EOF
 [Unit]
-Description=Renfe Cercanias Asturias Capture
+Description=Renfe Capture — Asturias + Cadiz + Largo Recorrido
 After=network-online.target
 Wants=network-online.target
 
@@ -66,74 +73,33 @@ Wants=network-online.target
 Type=simple
 User=$VM_USER
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/python3 $APP_DIR/renfe_asturias_cercanias.py --loop 30
+ExecStart=/usr/bin/python3 $APP_DIR/renfe_capture.py --loop 30
 Restart=always
-RestartSec=10
-StandardOutput=append:/var/log/renfe-asturias.log
-StandardError=append:/var/log/renfe-asturias.log
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-cat > /etc/systemd/system/renfe-cadiz.service << EOF
-[Unit]
-Description=Renfe Cercanias Cadiz Capture
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=$VM_USER
-WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/python3 $APP_DIR/renfe_cadiz_cercanias.py --loop 30
-Restart=always
-RestartSec=10
-StandardOutput=append:/var/log/renfe-cadiz.log
-StandardError=append:/var/log/renfe-cadiz.log
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-cat > /etc/systemd/system/renfe-largo.service << EOF
-[Unit]
-Description=Renfe Largo Recorrido Cadiz-Madrid Capture
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=$VM_USER
-WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/python3 $APP_DIR/renfe_largo_recorrido.py --loop 30
-Restart=always
-RestartSec=10
-StandardOutput=append:/var/log/renfe-largo.log
-StandardError=append:/var/log/renfe-largo.log
+RestartSec=15
+StandardOutput=append:/var/log/renfe-capture.log
+StandardError=append:/var/log/renfe-capture.log
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable renfe-asturias renfe-cadiz renfe-largo
-systemctl start  renfe-asturias renfe-cadiz renfe-largo
+systemctl enable renfe-capture
+systemctl start  renfe-capture
 
 echo ""
 echo "========================================"
 echo "  INSTALACION COMPLETADA"
 echo "========================================"
 echo ""
-systemctl is-active renfe-asturias && echo "  renfe-asturias : ACTIVO" || echo "  renfe-asturias : ERROR"
-systemctl is-active renfe-cadiz    && echo "  renfe-cadiz    : ACTIVO" || echo "  renfe-cadiz    : ERROR"
-systemctl is-active renfe-largo    && echo "  renfe-largo    : ACTIVO" || echo "  renfe-largo    : ERROR"
+systemctl is-active renfe-capture && echo "  renfe-capture : ACTIVO" || echo "  renfe-capture : ERROR"
 echo ""
 echo "  Cargar estaciones (solo la primera vez):"
-echo "    python3 $APP_DIR/renfe_largo_recorrido.py --init-stations"
+echo "    python3 $APP_DIR/renfe_capture.py --init-stations"
 echo ""
 echo "  Ver logs en tiempo real:"
-echo "    journalctl -u renfe-asturias -f"
-echo "    journalctl -u renfe-cadiz    -f"
-echo "    journalctl -u renfe-largo    -f"
+echo "    journalctl -u renfe-capture -f"
+echo ""
+echo "  Ver resumen de datos:"
+echo "    python3 $APP_DIR/renfe_capture.py --summary"
 echo "========================================"
