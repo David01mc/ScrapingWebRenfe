@@ -2,13 +2,18 @@
 # =============================================================================
 # sync_dbs.sh — Descarga las bases de datos desde la VM a tu PC local
 # =============================================================================
-# Configurar VM_IP y VM_USER antes de usar.
+# Requiere un fichero .env en la raíz del proyecto con VM_IP y VM_USER.
 # Ejecutar desde tu PC (no desde la VM):
 #   chmod +x sync_dbs.sh && ./sync_dbs.sh
 # =============================================================================
 
-VM_IP="REDACTED_IP"
-VM_USER="REDACTED_USER"
+ENV_FILE="$(dirname "$0")/../.env"
+if [ ! -f "$ENV_FILE" ]; then
+    echo "ERROR: No se encontró .env en $(realpath "$ENV_FILE")"
+    exit 1
+fi
+set -a; source "$ENV_FILE"; set +a
+
 SSH_KEY="~/RenfeKey.pem"    # Clave descargada al crear la VM en Azure
 REMOTE_DIR="/opt/renfe"
 LOCAL_DIR="./dbs_backup"

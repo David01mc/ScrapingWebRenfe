@@ -10,7 +10,13 @@
 set -e
 
 APP_DIR="/opt/renfe"
-VM_USER="REDACTED_USER"
+
+ENV_FILE="$(dirname "$0")/.env"
+if [ ! -f "$ENV_FILE" ]; then
+    echo "ERROR: No se encontró .env junto a setup.sh ($(realpath "$ENV_FILE"))"
+    exit 1
+fi
+set -a; source "$ENV_FILE"; set +a
 
 echo "========================================"
 echo "  SETUP RENFE SCRAPER — Azure VM"
