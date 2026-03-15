@@ -347,6 +347,11 @@ scp -i deploy\RenfeKey.pem `
 scp -i deploy\RenfeKey.pem deploy\setup.sh <usuario>@<ip-vm>:~/
 ```
 
+> **Importante:** El archivo `.env` con las credenciales **no está en el repositorio** (está en `.gitignore`). Hay que subirlo aparte manualmente:
+> ```powershell
+> scp -i deploy\RenfeKey.pem .env <usuario>@<ip-vm>:~/
+> ```
+
 ### 6.4 Conectarse a la VM
 
 ```powershell
@@ -366,11 +371,14 @@ El script `setup.sh` hace automáticamente:
 1. Actualiza el sistema (`apt-get update && upgrade`)
 2. Instala Python 3 y pip
 3. Instala **Microsoft ODBC Driver 18 for SQL Server**
-4. Instala `requests` y `pyodbc` vía pip
+4. Instala `requests`, `pyodbc` y `python-dotenv` vía pip
 5. Copia los scripts a `/opt/renfe/`
 6. Crea e inicia los 3 servicios systemd con `--loop 30`
 
 ```bash
+# Copiar el .env al directorio de la aplicación
+sudo cp ~/.env /opt/renfe/.env
+
 # Tras el setup, cargar catálogo de estaciones (largo recorrido, solo una vez):
 python3 /opt/renfe/renfe_largo_recorrido.py --init-stations
 ```
@@ -386,6 +394,20 @@ scp -i deploy\RenfeKey.pem renfe_asturias_cercanias.py <usuario>@<ip-vm>:~/
 # En la VM: copiar y reiniciar
 sudo cp ~/renfe_asturias_cercanias.py /opt/renfe/
 sudo systemctl restart renfe-asturias
+```
+
+Si se modifican las credenciales (`.env`):
+
+```powershell
+# Subir el nuevo .env desde Windows
+scp -i deploy\RenfeKey.pem .env <usuario>@<ip-vm>:~/
+```
+
+```bash
+# En la VM: reemplazar y reiniciar todos los servicios
+sudo cp ~/.env /opt/renfe/.env
+sudo systemctl restart renfe-asturias renfe-cadiz renfe-largo
+```
 ```
 
 ---

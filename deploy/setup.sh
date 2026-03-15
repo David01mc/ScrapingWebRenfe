@@ -33,16 +33,18 @@ apt-get update -qq
 ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
 # ── 4. Instalar dependencias Python ──────────────────────────────────────────
-echo "[4/6] Instalando requests y pyodbc..."
-pip3 install --quiet requests pyodbc
+echo "[4/6] Instalando requests, pyodbc y python-dotenv..."
+pip3 install --quiet requests pyodbc python-dotenv
 
 # ── 5. Copiar scripts ─────────────────────────────────────────────────────────
 echo "[5/6] Copiando scripts a $APP_DIR..."
 mkdir -p "$APP_DIR"
-cp /home/$VM_USER/renfe_asturias_cercanias.py   "$APP_DIR/"
-cp /home/$VM_USER/renfe_cadiz_cercanias.py "$APP_DIR/"
-cp /home/$VM_USER/renfe_largo_recorrido.py "$APP_DIR/"
-cp /home/$VM_USER/azure_db.py              "$APP_DIR/"
+cp /home/$VM_USER/renfe_asturias_cercanias.py "$APP_DIR/"
+cp /home/$VM_USER/renfe_cadiz_cercanias.py    "$APP_DIR/"
+cp /home/$VM_USER/renfe_largo_recorrido.py    "$APP_DIR/"
+cp /home/$VM_USER/azure_db.py                 "$APP_DIR/"
+cp /home/$VM_USER/.env                        "$APP_DIR/.env"
+chmod 600 "$APP_DIR/.env"
 chown -R $VM_USER:$VM_USER "$APP_DIR"
 
 # ── 6. Crear e iniciar servicios systemd ─────────────────────────────────────

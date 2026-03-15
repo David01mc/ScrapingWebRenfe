@@ -4,7 +4,7 @@ deploy/RenfeKey.pem  # clave privada SSH de la VM
 *.pem
 *.key
 .env
-.env.*
+
 
 # ─── Bases de datos locales ───────────────────────────────────────────────────
 *.db
