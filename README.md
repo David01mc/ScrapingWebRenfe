@@ -3,15 +3,16 @@
 ## Índice
 
 1. [Resumen del proyecto](#1-resumen-del-proyecto)
-2. [Fuentes de datos](#2-fuentes-de-datos)
-3. [Los tres scripts de captura](#3-los-tres-scripts-de-captura)
-4. [Esquema de Azure SQL Database](#4-esquema-de-azure-sql-database)
-5. [Cálculo de velocidad y bearing](#5-cálculo-de-velocidad-y-bearing)
-6. [Puesta en marcha — paso a paso](#6-puesta-en-marcha--paso-a-paso)
-7. [Despliegue en Azure](#7-despliegue-en-azure)
-8. [Gestión de los servicios en la VM](#8-gestión-de-los-servicios-en-la-vm)
-9. [Consultar y exportar datos](#9-consultar-y-exportar-datos)
-10. [Próximos pasos — Análisis y ML](#10-próximos-pasos--análisis-y-ml)
+2. [Optimización de vCore-segundos](#2-optimización-de-vcore-segundos)
+3. [Fuentes de datos](#3-fuentes-de-datos)
+4. [Scripts](#4-scripts)
+5. [Esquema de Azure SQL Database](#5-esquema-de-azure-sql-database)
+6. [Cálculo de velocidad y bearing](#6-cálculo-de-velocidad-y-bearing)
+7. [Puesta en marcha — paso a paso](#7-puesta-en-marcha--paso-a-paso)
+8. [Despliegue en Azure](#8-despliegue-en-azure)
+9. [Gestión del servicio en la VM](#9-gestión-del-servicio-en-la-vm)
+10. [Consultar y exportar datos](#10-consultar-y-exportar-datos)
+11. [Próximos pasos — Análisis y ML](#11-próximos-pasos--análisis-y-ml)
 
 ---
 
@@ -33,7 +34,7 @@ Para reducir al máximo el consumo de vCore-segundos del tier gratuito de Azure 
 | Optimización | Detalle |
 |---|---|
 | **Script unificado** | Un solo proceso (`renfe_capture.py`) gestiona las 3 fuentes — 1 conexión por flush en lugar de 3 |
-| **Flush cada 20 min** | 40 ciclos × 30s — la BD permanece inactiva y puede auto-pausarse entre flushes |
+| **Flush cada 2 horas** | 240 ciclos × 30s — la BD puede auto-pausarse entre flushes (auto-pause delay mínimo: 1 hora) |
 | **Pausa nocturna** | Sin capturas entre las 23:00 y las 06:00 UTC — trenes sin servicio de madrugada |
 | **Itinerarios sin duplicados** | El itinerario de cada tren se guarda una sola vez por día (~90% menos filas en `train_itineraries`) |
 | **Caché en memoria** | Velocidad y bearing calculados sin consultar la BD — los cachés viven en RAM |
@@ -53,7 +54,95 @@ Para reducir al máximo el consumo de vCore-segundos del tier gratuito de Azure 
 
 ---
 
-## 2. Fuentes de datos
+---
+
+## 2. Optimización de vCore-segundos
+
+### ¿Qué son los vCore-segundos?
+
+Azure SQL Database Serverless (tier gratuito) no cobra por tiempo de reloj sino por **vCore-segundos**: el producto de los vCores usados por el tiempo que la BD está activa. El tier gratuito incluye **100.000 vCore-segundos al mes**.
+
+Cuando la BD lleva más de **1 hora sin recibir conexiones**, entra en **auto-pause** y el consumo cae a 0. En cuanto llega una nueva conexión, se reactiva (~30-60 segundos de arranque) y vuelve a consumir.
+
+```
+vCore-segundos/s = vCores activos × tiempo activo (s)
+Mínimo activo    = 0,5 vCores (cuando está "caliente" pero sin carga)
+Auto-pause       = 0 vCores   (tras >1 hora sin conexiones)
+```
+
+### El problema: conexiones frecuentes impiden el auto-pause
+
+Si el script conecta a la BD cada pocos minutos, el timer de auto-pause se resetea continuamente. La BD permanece "caliente" consumiendo 0,5 vCores de forma ininterrumpida:
+
+```
+0,5 vCores × 3.600 s/hora × 17 horas activas/día = 30.600 vCore-s/día
+30.600 × 30 días = ~918.000 vCore-s/mes   ← 9× el límite gratuito
+```
+
+### Evolución del consumo — versiones del proyecto
+
+```
+ vCore-s restantes (límite: 100.000/mes)
+ │
+100k ┤████████████████████████████████████████████████  Inicio de mes
+     │
+ 80k ┤╲  V1 — conexión persistente (3 scripts, siempre conectados)
+     │  ╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲
+ 60k ┤                  ╲╲╲╲╲╲╲╲╲╲╲
+     │                             ╲╲╲╲╲╲╲
+ 40k ┤                                    ╲╲╲╲╲╲╲
+     │                                           ╲ Se agota en ~2 días
+ 20k ┤                                            ╲╲╲╲
+     │                                                ╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲
+  0k ┤                                                             ← día 2
+     │
+     │  V2 — batch 20 min (mejor, pero BD nunca auto-pausa)
+ 80k ┤╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲
+     │                                                            ~30k/mes
+     │
+     │  V3 — batch 2 horas + pausa nocturna (actual)             ← ACTUAL
+ 80k ┤────────────────────────────────────────────────────────────────────
+     │                                                             ~8k/mes
+  0k └──────────────────────────────────────────────────────────────────→
+     día 1                    día 15                           día 30
+```
+
+### ¿Por qué el flush cada 2 horas?
+
+Azure SQL tiene un **auto-pause delay mínimo configurable de 1 hora**. Con flush cada 2 horas:
+
+1. A las 0 min → flush (BD activa ~60 s, incluyendo reanudación)
+2. De 1 min a ~60 min → BD entra en auto-pause (0 vCore-s)
+3. De 60 min a 120 min → BD sigue pausada
+4. A los 120 min → siguiente flush (vuelve a activarse ~60 s)
+
+```
+Consumo real por flush:
+  0,5 vCores × 60 s (activación + insert) = 30 vCore-s por flush
+
+Al día (17 h activas, flush cada 2 h):
+  ~9 flushes × 30 vCore-s = 270 vCore-s/día
+
+Al mes:
+  270 × 30 = ~8.100 vCore-s/mes  →  8% del límite gratuito
+```
+
+### Resumen comparativo
+
+| Versión | Estrategia | vCore-s/mes estimados | Límite agotado en |
+|---|---|---|---|
+| V1 original | 3 scripts, conexión persistente | ~918.000 | < 2 días |
+| V2 batch 20 min | 1 script, flush cada 20 min | ~30.000 | ~3 meses |
+| **V3 actual** | **1 script, flush cada 2 h + pausa nocturna** | **~8.100** | **~12 meses** |
+| Límite gratuito | — | 100.000 | — |
+
+### ¿Las velocidades se ven afectadas?
+
+No. El cálculo de velocidad y bearing se realiza en **memoria RAM** cada 30 segundos, independientemente del flush. La BD solo recibe datos ya calculados en el momento del insert.
+
+---
+
+## 3. Fuentes de datos
 
 ### Cercanías — GTFS-RT oficial Renfe (CC BY 4.0)
 
@@ -104,7 +193,7 @@ Captura las tres fuentes en un único proceso: Cercanías Asturias, Cercanías C
 **Uso:**
 ```bash
 python renfe_capture.py                          # Captura única
-python renfe_capture.py --loop 30               # Loop: captura 30s, flush 20 min, pausa nocturna
+python renfe_capture.py --loop 30               # Loop: captura 30s, flush 2 h, pausa nocturna
 python renfe_capture.py --summary               # Resumen de todas las tablas
 python renfe_capture.py --init-stations         # Cargar catálogo de estaciones (solo 1ª vez)
 python renfe_capture.py --loop 30 --flush-every 20   # Flush cada 10 min
@@ -415,15 +504,15 @@ Deberías ver algo así:
 
 ```
 Tablas e índices verificados (Azure SQL — Unificado).
-Captura cada 30s | Flush cada 1200s | Pausa nocturna 23:00–06:00 UTC
+Captura cada 30s | Flush cada 7200s | Pausa nocturna 23:00–06:00 UTC
 
 [2026-03-15 21:30:00] AST 8pos/12upd  CDZ 5pos/8upd  LR 3snap/0itin  2.1s
 [2026-03-15 21:30:30] AST 8pos/11upd  CDZ 5pos/7upd  LR 3snap/0itin  1.9s
 ...
-  → Flush BD | AST: 320pos/480upd | CDZ: 200pos/320upd | LR: 120snap/45itin | total 1485 filas
+  → Flush BD | AST: 1600pos/2400upd | CDZ: 1000pos/1600upd | LR: 600snap/180itin | total 7380 filas
 ```
 
-El flush aparece cada 20 minutos. Los itinerarios (`itin`) solo aparecen la primera vez que se ve cada tren en el día.
+El flush aparece cada 2 horas. Los itinerarios (`itin`) solo aparecen la primera vez que se ve cada tren en el día.
 
 ---
 
@@ -466,19 +555,13 @@ Un único servicio systemd gestiona las tres fuentes y arranca automáticamente 
 
 | Servicio | Script | Captura | Flush | Pausa nocturna |
 |---|---|---|---|---|
-| `renfe-capture` | `renfe_capture.py --loop 30` | 30s | 20 min | 23:00–06:00 UTC |
+| `renfe-capture` | `renfe_capture.py --loop 30 --flush-every 240` | 30s | 2 horas | 23:00–06:00 UTC |
 
 ### Comandos útiles
 
 ```bash
 # Estado del servicio
 sudo systemctl status renfe-capture
-
-# Ver logs en tiempo real
-journalctl -u renfe-capture -f
-
-# Ver los últimos 50 registros
-journalctl -u renfe-capture -n 50 --no-pager
 
 # Reiniciar / Parar / Arrancar
 sudo systemctl restart renfe-capture
@@ -491,6 +574,38 @@ python3 /opt/renfe/renfe_capture.py
 # Ver resumen de datos capturados
 python3 /opt/renfe/renfe_capture.py --summary
 ```
+
+### Logs
+
+El script escribe un log detallado en `/opt/renfe/renfe-capture.log` con una línea por ciclo de captura y una línea especial por cada flush a BD.
+
+```bash
+# Ver logs en tiempo real
+tail -f /opt/renfe/renfe-capture.log
+
+# Ver solo los flushes a BD
+grep "FLUSH" /opt/renfe/renfe-capture.log
+
+# Ver solo errores y avisos
+grep -E "ERROR|WARNING" /opt/renfe/renfe-capture.log
+
+# Ver los últimos 50 registros
+tail -50 /opt/renfe/renfe-capture.log
+```
+
+**Formato del log:**
+
+```
+2026-03-16 21:02:15 INFO CAPTURA | AST 26pos/1upd  CDZ 5pos/4upd  LR 145snap/0itin  0.8s
+2026-03-16 21:02:45 INFO CAPTURA | AST 24pos/0upd  CDZ 4pos/3upd  LR 143snap/0itin  0.7s
+...
+2026-03-16 23:02:15 INFO FLUSH | AST: 1820pos/70upd | CDZ: 350pos/280upd | LR: 10150snap/0itin | total 12670 filas
+```
+
+- **CAPTURA**: línea cada 30 segundos con el número de registros acumulados en el ciclo actual.
+- **FLUSH**: línea cada 2 horas con el total de filas insertadas en Azure SQL.
+- **WARNING**: captura con errores parciales (uno de los feeds falló, el resto continúa).
+- **ERROR**: error crítico que ha provocado el cierre del proceso.
 
 ---
 
@@ -594,4 +709,4 @@ Muestra: snapshots por línea, velocidad media/máxima, retrasos medios/máximos
 
 ---
 
-*Documentación actualizada el 2026-03-15*
+*Documentación actualizada el 2026-03-16*

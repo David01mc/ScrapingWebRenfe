@@ -20,10 +20,26 @@ import re
 import requests
 import argparse
 import time
+import logging
+import sys
 from datetime import datetime, timedelta, timezone
 
 import pyodbc
 from azure_db import get_conn, run_ddl
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+LOG_FILE = "/opt/renfe/renfe-capture.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
+        logging.StreamHandler(sys.stdout),
+    ],
+)
+log = logging.getLogger(__name__)
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║  CONFIGURACIÓN                                               ║
@@ -173,10 +189,20 @@ def init_db(conn: pyodbc.Connection):
 # ║  PAUSA NOCTURNA                                              ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-def wait_if_night():
-    """Si es horario nocturno (23:00–06:00 UTC), duerme hasta las 06:00."""
+def wait_if_night(batch: dict) -> int:
+    """
+    Si es horario nocturno (23:00–06:00 UTC), hace flush de los datos
+    pendientes y duerme hasta las 06:00. Devuelve el cycle reseteado (0).
+    """
     now = datetime.now(timezone.utc)
     if now.hour >= NIGHT_START or now.hour < NIGHT_END:
+        # Volcar datos pendientes antes de dormir
+        if any(batch[k] for k in batch):
+            print(f"[{now.strftime('%Y-%m-%d %H:%M')} UTC] Flush pre-pausa nocturna...")
+            conn = get_conn()
+            flush_batch(conn, batch)
+            conn.close()
+
         if now.hour >= NIGHT_START:
             dawn = (now + timedelta(days=1)).replace(
                 hour=NIGHT_END, minute=0, second=0, microsecond=0)
@@ -189,6 +215,8 @@ def wait_if_night():
             f"({secs / 3600:.1f}h)"
         )
         time.sleep(secs)
+        return 0  # resetear cycle tras despertar
+    return -1     # indicador: no era de noche, cycle sin cambios
 
 
 # ╔══════════════════════════════════════════════════════════════╗
@@ -427,9 +455,6 @@ def _process_largo_flota() -> list:
 
     rows = []
     for tren in data.get("trenes", []):
-        corridor = (tren.get("desCorridor") or "").lower()
-        if not any(kw in corridor for kw in CADIZ_MADRID_KEYWORDS):
-            continue
 
         cod = tren.get("codComercial")
         lat, lon = tren.get("latitud"), tren.get("longitud")
@@ -569,12 +594,13 @@ def flush_batch(conn, batch: dict):
     cursor.close()
 
     total = sum(len(v) for v in batch.values())
-    print(
-        f"  → Flush BD | "
-        f"AST: {len(batch['ast_snap'])} pos / {len(batch['ast_trips'])} upd | "
-        f"CDZ: {len(batch['cdz_snap'])} pos / {len(batch['cdz_trips'])} upd | "
-        f"LR: {len(batch['lr_snap'])} snap / {len(batch['lr_itin'])} itin | "
-        f"total {total} filas"
+    log.info(
+        "FLUSH | AST: %d pos / %d upd | CDZ: %d pos / %d upd | "
+        "LR: %d snap / %d itin | total %d filas",
+        len(batch['ast_snap']), len(batch['ast_trips']),
+        len(batch['cdz_snap']), len(batch['cdz_trips']),
+        len(batch['lr_snap']),  len(batch['lr_itin']),
+        total,
     )
     for key in batch:
         batch[key].clear()
@@ -659,14 +685,18 @@ def capture_once(batch: dict):
         errors.append(f"lr_itin: {e}")
 
     elapsed = (datetime.now() - t0).total_seconds()
-    err_str = f" | ERR: {errors}" if errors else ""
-    print(
-        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
-        f"AST {stats['ast_snap']}pos/{stats['ast_trips']}upd  "
-        f"CDZ {stats['cdz_snap']}pos/{stats['cdz_trips']}upd  "
-        f"LR {stats['lr_snap']}snap/{stats['lr_itin']}itin  "
-        f"{elapsed:.1f}s{err_str}"
-    )
+    if errors:
+        log.warning("CAPTURA | AST %dpos/%dupd  CDZ %dpos/%dupd  LR %dsnap/%ditin  %.1fs | ERR: %s",
+            stats['ast_snap'], stats['ast_trips'],
+            stats['cdz_snap'], stats['cdz_trips'],
+            stats['lr_snap'],  stats['lr_itin'],
+            elapsed, errors)
+    else:
+        log.info("CAPTURA | AST %dpos/%dupd  CDZ %dpos/%dupd  LR %dsnap/%ditin  %.1fs",
+            stats['ast_snap'], stats['ast_trips'],
+            stats['cdz_snap'], stats['cdz_trips'],
+            stats['lr_snap'],  stats['lr_itin'],
+            elapsed)
 
 
 # ╔══════════════════════════════════════════════════════════════╗
@@ -790,7 +820,9 @@ def main():
         cycle = 0
         try:
             while True:
-                wait_if_night()
+                result = wait_if_night(batch)
+                if result == 0:
+                    cycle = 0  # se acaba de despertar tras pausa nocturna
                 capture_once(batch)
                 cycle += 1
                 if cycle >= flush_every:

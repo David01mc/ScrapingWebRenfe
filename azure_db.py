@@ -19,7 +19,7 @@ CONN_STR = (
     f"PWD={os.environ['DB_PASSWORD']};"
     "Encrypt=yes;"
     "TrustServerCertificate=no;"
-    "Connection Timeout=30;"
+    "Connection Timeout=60;"
 )
 
 
