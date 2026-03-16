@@ -73,11 +73,9 @@ Wants=network-online.target
 Type=simple
 User=$VM_USER
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/python3 $APP_DIR/renfe_capture.py --loop 30
+ExecStart=/usr/bin/python3 $APP_DIR/renfe_capture.py --loop 30 --flush-every 240
 Restart=always
 RestartSec=15
-StandardOutput=append:/var/log/renfe-capture.log
-StandardError=append:/var/log/renfe-capture.log
 
 [Install]
 WantedBy=multi-user.target
@@ -98,7 +96,10 @@ echo "  Cargar estaciones (solo la primera vez):"
 echo "    python3 $APP_DIR/renfe_capture.py --init-stations"
 echo ""
 echo "  Ver logs en tiempo real:"
-echo "    journalctl -u renfe-capture -f"
+echo "    tail -f $APP_DIR/renfe-capture.log"
+echo ""
+echo "  Ver solo flushes a BD:"
+echo "    grep FLUSH $APP_DIR/renfe-capture.log"
 echo ""
 echo "  Ver resumen de datos:"
 echo "    python3 $APP_DIR/renfe_capture.py --summary"
