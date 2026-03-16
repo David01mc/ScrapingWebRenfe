@@ -516,6 +516,30 @@ El flush aparece cada 2 horas. Los itinerarios (`itin`) solo aparecen la primera
 
 ---
 
+### Descargar el log desde la VM a tu PC
+
+El script `deploy/sync_dbs.sh` descarga el log de captura desde la VM y muestra un resumen:
+
+```bash
+bash deploy/sync_dbs.sh
+```
+
+El log se guarda en `logs/renfe-capture_YYYYMMDD_HHMMSS.log` con un resumen automático:
+
+```
+Descargando log desde 68.221.175.21...
+Log guardado en: logs/renfe-capture_20260316_210500.log
+
+=== Resumen ===
+Total líneas    : 4320
+Flushes a BD    : 8
+Warnings/Errors : 0
+Primer registro : 2026-03-16 06:00:05 INFO CAPTURA | ...
+Último registro : 2026-03-16 22:41:05 INFO FLUSH | ...
+```
+
+---
+
 ### Actualizar scripts en el futuro
 
 ```bash
