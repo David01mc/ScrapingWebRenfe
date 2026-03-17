@@ -1,0 +1,388 @@
+const TRANSLATIONS = {
+  es: {
+    // Nav
+    'nav.how': 'Cómo funciona',
+    'nav.architecture': 'Arquitectura',
+    'nav.data': 'Datos',
+    'nav.optimization': 'Optimización',
+    'nav.setup': 'Instalación',
+    'nav.analysis': 'Análisis',
+    'nav.download': 'Descargar',
+
+    // Hero
+    'hero.title': 'Captura de Trenes Renfe',
+    'hero.subtitle': 'Sistema autónomo de scraping en tiempo real. Recolecta posiciones GPS, retrasos y alertas de Cercanías Asturias, Cercanías Cádiz y Largo Recorrido de toda España. Almacena en Azure SQL Database y calcula velocidades derivadas mediante Haversine.',
+    'hero.cta.github': 'Ver en GitHub',
+    'hero.cta.download': 'Descargar ZIP',
+    'hero.badge.realtime': 'Tiempo Real',
+    'hero.badge.opensource': 'Open Source',
+    'hero.badge.academic': 'Académico',
+
+    // Stats
+    'stats.tables.label': 'Tablas en Azure SQL',
+    'stats.interval.label': 'segundos entre capturas',
+    'stats.rows.label': 'filas por flush',
+    'stats.zones.label': 'zonas geográficas',
+    'stats.title': 'El proyecto en números',
+
+    // How it works
+    'how.title': 'Cómo funciona',
+    'how.subtitle': 'Un único proceso Python captura, procesa y almacena datos de trenes en tiempo real de forma completamente autónoma',
+    'how.step1.title': 'Captura',
+    'how.step1.desc': 'Peticiones HTTP cada 30 segundos a los feeds oficiales GTFS-RT de Renfe. Posiciones GPS, retrasos por parada y alertas de servicio.',
+    'how.step2.title': 'Procesa',
+    'how.step2.desc': 'Filtrado geográfico por bounding box, cálculo de velocidad y bearing mediante Haversine. Todo en memoria RAM sin tocar la base de datos.',
+    'how.step3.title': 'Almacena',
+    'how.step3.desc': 'Flush a Azure SQL cada 4 horas con una única conexión. La base de datos entra en auto-pause entre flushes, minimizando el consumo del tier gratuito.',
+
+    // Architecture
+    'arch.title': 'Arquitectura del Sistema',
+    'arch.subtitle': 'Un script unificado gestiona las tres fuentes de datos y optimiza el consumo de Azure SQL mediante batching en memoria',
+    'arch.flow.title': 'Flujo de Datos Detallado',
+    'arch.tech.title': 'Tecnologías',
+    'arch.tech.capture': 'Captura HTTP',
+    'arch.tech.capture.desc': 'GET cada 30s a Renfe',
+    'arch.tech.parse': 'Parseo',
+    'arch.tech.parse.desc': 'JSON → tuplas → batch RAM',
+    'arch.tech.speed': 'Velocidad',
+    'arch.tech.speed.desc': 'Haversine + caché en memoria',
+    'arch.tech.db': 'Persistencia',
+    'arch.tech.db.desc': 'Flush 4h, 1 conexión',
+    'arch.tech.vm': 'Ejecución',
+    'arch.tech.vm.desc': 'systemd, auto-restart',
+    'arch.tech.logs': 'Logs',
+    'arch.tech.logs.desc': '/opt/renfe/renfe-capture.log',
+
+    // Data
+    'data.title': 'Datos Capturados',
+    'data.subtitle': 'Tres fuentes de datos oficiales de Renfe (licencia CC BY 4.0), filtradas geográficamente y almacenadas con esquema optimizado',
+    'data.asturias.title': 'Cercanías Asturias',
+    'data.asturias.desc': 'Red de cercanías del norte de España. Filtrado por bounding box geográfico.',
+    'data.asturias.bbox': 'Zona: lat 43.0–43.7 / lon -7.0–-4.5',
+    'data.asturias.tables': '3 tablas: snapshots, trip_updates, alerts',
+    'data.cadiz.title': 'Cercanías Cádiz',
+    'data.cadiz.desc': 'Red de cercanías de la Bahía de Cádiz. Filtrado por bounding box geográfico.',
+    'data.cadiz.bbox': 'Zona: lat 36.3–37.5 / lon -6.5–-5.7',
+    'data.cadiz.tables': '3 tablas: snapshots, trip_updates, alerts',
+    'data.largo.title': 'Largo Recorrido',
+    'data.largo.desc': 'Todos los trenes AVE, Alvia, Avant e Intercity de toda España. Sin filtro geográfico.',
+    'data.largo.bbox': 'Cobertura: toda España (~145 trenes activos)',
+    'data.largo.tables': '3 tablas: train_snapshots, itineraries, stations',
+    'data.snapshot.label': 'Ejemplo de dato capturado',
+    'data.fields.title': 'Campos principales',
+    'data.fields.pos': 'Posición GPS (lat/lon)',
+    'data.fields.speed': 'Velocidad calculada (km/h)',
+    'data.fields.bearing': 'Rumbo calculado (0–360°)',
+    'data.fields.status': 'Estado: INCOMING_AT / STOPPED_AT / IN_TRANSIT_TO',
+    'data.fields.delay': 'Retraso en segundos por parada',
+    'data.fields.line': 'Línea extraída del label (C1, C2...)',
+
+    // Optimization
+    'opt.title': 'Optimización de Consumo Azure SQL',
+    'opt.subtitle': 'La evolución del sistema desde conexión persistente hasta batch de 4 horas redujo el consumo un 95%',
+    'opt.chart.title': 'Consumo mensual por versión (vCore-segundos)',
+    'opt.limit': 'Límite gratuito: 100.000 vCore-s/mes',
+    'opt.table.version': 'Versión',
+    'opt.table.strategy': 'Estrategia',
+    'opt.table.consumption': 'Consumo/mes',
+    'opt.table.status': 'Estado',
+    'opt.v1.strategy': '3 scripts, conexión persistente',
+    'opt.v2.strategy': '1 script, flush cada 20 min',
+    'opt.v3.strategy': '1 script, flush 2h + pausa nocturna',
+    'opt.v4.strategy': '1 script, flush 4h + pausa nocturna',
+    'opt.cycle.title': 'Ciclo de consumo con flush cada 4h',
+    'opt.cycle.flush': 'Flush (~60s activa)',
+    'opt.cycle.cooling': 'Enfriamiento (~60 min)',
+    'opt.cycle.pause': 'Auto-pause (~3h)',
+    'opt.night.title': 'Pausa nocturna automática',
+    'opt.night.desc': 'Entre las 23:00 y 06:00 UTC no hay capturas ni conexiones. La base de datos permanece en auto-pause durante 7 horas, reduciendo el consumo mensual un 30% adicional.',
+
+    // Speed
+    'speed.title': 'Cálculo de Velocidad y Bearing',
+    'speed.subtitle': 'Renfe no publica velocidad ni rumbo en sus feeds. El sistema los calcula derivándolos de snapshots consecutivos mediante Haversine',
+    'speed.problem.title': 'El problema',
+    'speed.problem.desc': 'El API GTFS-RT de Renfe incluye solo latitud y longitud. Para cercanías, las coordenadas GPS se actualizan cada 2-10 minutos (no cada 20s como el feed), lo que requiere compensación temporal.',
+    'speed.algo.title': 'Algoritmo',
+    'speed.algo.step1': 'Obtener posición anterior de _position_cache (sin BD)',
+    'speed.algo.step2': 'Si posición no cambió (Δlat < 0.0001): speed = NULL',
+    'speed.algo.step3': 'Si cambió: buscar en _first_pos_cache cuándo fue la primera vez en esa posición',
+    'speed.algo.step4': 'speed = distancia_Haversine / tiempo_real_transcurrido',
+    'speed.algo.step5': 'Filtrar: < 0.5 km/h → NULL (drift GPS) | > 200 km/h cercanías → NULL',
+    'speed.cache.title': 'Caché en memoria RAM',
+    'speed.cache.pos': '_position_cache: última posición por vehicle_id',
+    'speed.cache.first': '_first_pos_cache: primera vez capturada por vehicle_id + posición',
+    'speed.cache.note': 'Ambos cachés viven toda la sesión del proceso. Sin consultas a la BD.',
+
+    // Schema
+    'schema.title': 'Esquema de Datos',
+    'schema.subtitle': 'Todas las tablas se crean automáticamente al arrancar el script. 8 tablas en total.',
+    'schema.col.column': 'Columna',
+    'schema.col.type': 'Tipo',
+    'schema.col.desc': 'Descripción',
+
+    // Setup
+    'setup.title': 'Puesta en Marcha',
+    'setup.subtitle': 'Desde cero hasta capturando datos en producción en 9 pasos',
+    'setup.prereq': 'Prerrequisitos',
+    'setup.prereq.vm': 'VM Azure B1s con Ubuntu 22.04',
+    'setup.prereq.sql': 'Azure SQL Database creada y accesible desde la VM',
+    'setup.prereq.key': 'Clave SSH deploy/RenfeKey.pem disponible localmente',
+    'setup.step1.title': 'Configurar credenciales',
+    'setup.step2.title': 'Permisos SSH (Windows)',
+    'setup.step3.title': 'Subir archivos a la VM',
+    'setup.step4.title': 'Conectar por SSH',
+    'setup.step5.title': 'Ejecutar setup.sh',
+    'setup.step5.desc': 'Instala Python, ODBC Driver 18, dependencias y crea el servicio systemd.',
+    'setup.step6.title': 'Copiar .env a /opt/renfe/',
+    'setup.step7.title': 'Cargar catálogo de estaciones',
+    'setup.step7.desc': 'Solo necesario la primera vez para largo recorrido.',
+    'setup.step8.title': 'Verificar el servicio',
+    'setup.step9.title': 'Ver logs en tiempo real',
+
+    // Query
+    'query.title': 'Consultar los Datos',
+    'query.subtitle': 'Los datos son accesibles desde cualquier cliente SQL o directamente con Python/pandas',
+    'query.clients.title': 'Clientes compatibles',
+    'query.clients.note': 'Añade tu IP local al firewall de Azure SQL: Portal → SQL Server → Networking → Firewall rules',
+    'query.sql.title': 'Consultas T-SQL de ejemplo',
+    'query.python.title': 'Python / pandas',
+
+    // Analysis
+    'analysis.title': 'Análisis y Machine Learning',
+    'analysis.subtitle': 'Dataset ideal para análisis de transporte público, predicción de retrasos y modelos de ML',
+    'analysis.col.analysis': 'Análisis',
+    'analysis.col.data': 'Datos necesarios',
+    'analysis.col.tables': 'Tablas',
+    'analysis.delay.name': 'Predicción de retrasos',
+    'analysis.delay.data': 'arrival_delay + hora + día + línea',
+    'analysis.speed.name': 'Velocidad media por tramo',
+    'analysis.speed.data': 'speed + stop_id consecutivos',
+    'analysis.punctuality.name': 'Puntualidad histórica',
+    'analysis.punctuality.data': 'arrival_delay + fecha agrupado',
+    'analysis.eta.name': 'Predicción ETA largo recorrido',
+    'analysis.eta.data': 'ult_retraso + hora_llegada_sig_est',
+    'analysis.anomaly.name': 'Anomalías de velocidad',
+    'analysis.anomaly.data': 'speed fuera de rango por tramo',
+    'analysis.pattern.name': 'Patrones por hora del día',
+    'analysis.pattern.data': 'arrival_delay + hora captured_at',
+    'analysis.route.name': 'Reconstrucción de trayectos',
+    'analysis.route.data': 'lat, lon, bearing ordenados por tiempo',
+    'analysis.summary': 'Ver resumen estadístico',
+
+    // Footer
+    'footer.license': 'Datos Renfe bajo licencia CC BY 4.0',
+    'footer.academic': 'Proyecto académico',
+    'footer.built': 'Construido con Python, Azure y mucho café',
+  },
+
+  en: {
+    // Nav
+    'nav.how': 'How it works',
+    'nav.architecture': 'Architecture',
+    'nav.data': 'Data',
+    'nav.optimization': 'Optimization',
+    'nav.setup': 'Setup',
+    'nav.analysis': 'Analysis',
+    'nav.download': 'Download',
+
+    // Hero
+    'hero.title': 'Renfe Train Capture System',
+    'hero.subtitle': 'Autonomous real-time scraping system. Collects GPS positions, delays and alerts from Cercanías Asturias, Cercanías Cádiz and Long Distance trains across Spain. Stores in Azure SQL Database and computes derived speeds using Haversine.',
+    'hero.cta.github': 'View on GitHub',
+    'hero.cta.download': 'Download ZIP',
+    'hero.badge.realtime': 'Real-Time',
+    'hero.badge.opensource': 'Open Source',
+    'hero.badge.academic': 'Academic',
+
+    // Stats
+    'stats.tables.label': 'Azure SQL Tables',
+    'stats.interval.label': 'seconds between captures',
+    'stats.rows.label': 'rows per flush',
+    'stats.zones.label': 'geographic zones',
+    'stats.title': 'The project in numbers',
+
+    // How it works
+    'how.title': 'How it works',
+    'how.subtitle': 'A single Python process captures, processes and stores real-time train data fully autonomously',
+    'how.step1.title': 'Capture',
+    'how.step1.desc': 'HTTP requests every 30 seconds to Renfe official GTFS-RT feeds. GPS positions, per-stop delays and service alerts.',
+    'how.step2.title': 'Process',
+    'how.step2.desc': 'Geographic filtering by bounding box, speed and bearing calculation using Haversine. All in RAM without touching the database.',
+    'how.step3.title': 'Store',
+    'how.step3.desc': 'Flush to Azure SQL every 4 hours with a single connection. The database auto-pauses between flushes, minimizing free tier consumption.',
+
+    // Architecture
+    'arch.title': 'System Architecture',
+    'arch.subtitle': 'A unified script manages three data sources and optimizes Azure SQL consumption through in-memory batching',
+    'arch.flow.title': 'Detailed Data Flow',
+    'arch.tech.title': 'Technologies',
+    'arch.tech.capture': 'HTTP Capture',
+    'arch.tech.capture.desc': 'GET every 30s to Renfe',
+    'arch.tech.parse': 'Parsing',
+    'arch.tech.parse.desc': 'JSON → tuples → RAM batch',
+    'arch.tech.speed': 'Speed',
+    'arch.tech.speed.desc': 'Haversine + in-memory cache',
+    'arch.tech.db': 'Persistence',
+    'arch.tech.db.desc': 'Flush every 4h, 1 connection',
+    'arch.tech.vm': 'Execution',
+    'arch.tech.vm.desc': 'systemd, auto-restart',
+    'arch.tech.logs': 'Logs',
+    'arch.tech.logs.desc': '/opt/renfe/renfe-capture.log',
+
+    // Data
+    'data.title': 'Captured Data',
+    'data.subtitle': 'Three official Renfe data sources (CC BY 4.0 license), geographically filtered and stored with an optimized schema',
+    'data.asturias.title': 'Cercanías Asturias',
+    'data.asturias.desc': 'Commuter rail network of northern Spain. Filtered by geographic bounding box.',
+    'data.asturias.bbox': 'Zone: lat 43.0–43.7 / lon -7.0–-4.5',
+    'data.asturias.tables': '3 tables: snapshots, trip_updates, alerts',
+    'data.cadiz.title': 'Cercanías Cádiz',
+    'data.cadiz.desc': 'Commuter rail network of the Bay of Cádiz. Filtered by geographic bounding box.',
+    'data.cadiz.bbox': 'Zone: lat 36.3–37.5 / lon -6.5–-5.7',
+    'data.cadiz.tables': '3 tables: snapshots, trip_updates, alerts',
+    'data.largo.title': 'Long Distance',
+    'data.largo.desc': 'All AVE, Alvia, Avant and Intercity trains across Spain. No geographic filter.',
+    'data.largo.bbox': 'Coverage: all Spain (~145 active trains)',
+    'data.largo.tables': '3 tables: train_snapshots, itineraries, stations',
+    'data.snapshot.label': 'Sample captured data',
+    'data.fields.title': 'Main fields',
+    'data.fields.pos': 'GPS position (lat/lon)',
+    'data.fields.speed': 'Computed speed (km/h)',
+    'data.fields.bearing': 'Computed bearing (0–360°)',
+    'data.fields.status': 'Status: INCOMING_AT / STOPPED_AT / IN_TRANSIT_TO',
+    'data.fields.delay': 'Delay in seconds per stop',
+    'data.fields.line': 'Line extracted from label (C1, C2...)',
+
+    // Optimization
+    'opt.title': 'Azure SQL Consumption Optimization',
+    'opt.subtitle': 'The system evolved from persistent connection to 4-hour batching, reducing consumption by 95%',
+    'opt.chart.title': 'Monthly consumption by version (vCore-seconds)',
+    'opt.limit': 'Free tier limit: 100,000 vCore-s/month',
+    'opt.table.version': 'Version',
+    'opt.table.strategy': 'Strategy',
+    'opt.table.consumption': 'Consumption/month',
+    'opt.table.status': 'Status',
+    'opt.v1.strategy': '3 scripts, persistent connection',
+    'opt.v2.strategy': '1 script, flush every 20 min',
+    'opt.v3.strategy': '1 script, flush 2h + night pause',
+    'opt.v4.strategy': '1 script, flush 4h + night pause',
+    'opt.cycle.title': 'Consumption cycle with 4h flush',
+    'opt.cycle.flush': 'Flush (~60s active)',
+    'opt.cycle.cooling': 'Cooling down (~60 min)',
+    'opt.cycle.pause': 'Auto-pause (~3h)',
+    'opt.night.title': 'Automatic night pause',
+    'opt.night.desc': 'Between 23:00 and 06:00 UTC there are no captures or connections. The database stays auto-paused for 7 hours, reducing monthly consumption by an additional 30%.',
+
+    // Speed
+    'speed.title': 'Speed and Bearing Calculation',
+    'speed.subtitle': 'Renfe does not publish speed or bearing in its feeds. The system computes them from consecutive snapshots using Haversine',
+    'speed.problem.title': 'The problem',
+    'speed.problem.desc': "Renfe's GTFS-RT API only includes latitude and longitude. For cercanías, GPS coordinates update every 2-10 minutes (not every 20s like the feed), requiring temporal compensation.",
+    'speed.algo.title': 'Algorithm',
+    'speed.algo.step1': 'Fetch previous position from _position_cache (no DB)',
+    'speed.algo.step2': 'If position unchanged (Δlat < 0.0001): speed = NULL',
+    'speed.algo.step3': 'If changed: look up _first_pos_cache for when train first arrived',
+    'speed.algo.step4': 'speed = Haversine_distance / real_elapsed_time',
+    'speed.algo.step5': 'Filter: < 0.5 km/h → NULL (GPS drift) | > 200 km/h cercanías → NULL',
+    'speed.cache.title': 'In-memory RAM cache',
+    'speed.cache.pos': '_position_cache: last known position per vehicle_id',
+    'speed.cache.first': '_first_pos_cache: first time captured per vehicle_id + position',
+    'speed.cache.note': 'Both caches live for the entire process session. Zero database queries.',
+
+    // Schema
+    'schema.title': 'Data Schema',
+    'schema.subtitle': 'All tables are created automatically on script startup. 8 tables total.',
+    'schema.col.column': 'Column',
+    'schema.col.type': 'Type',
+    'schema.col.desc': 'Description',
+
+    // Setup
+    'setup.title': 'Getting Started',
+    'setup.subtitle': 'From zero to capturing production data in 9 steps',
+    'setup.prereq': 'Prerequisites',
+    'setup.prereq.vm': 'Azure B1s VM with Ubuntu 22.04',
+    'setup.prereq.sql': 'Azure SQL Database created and accessible from the VM',
+    'setup.prereq.key': 'SSH key deploy/RenfeKey.pem available locally',
+    'setup.step1.title': 'Configure credentials',
+    'setup.step2.title': 'SSH permissions (Windows)',
+    'setup.step3.title': 'Upload files to VM',
+    'setup.step4.title': 'Connect via SSH',
+    'setup.step5.title': 'Run setup.sh',
+    'setup.step5.desc': 'Installs Python, ODBC Driver 18, dependencies and creates the systemd service.',
+    'setup.step6.title': 'Copy .env to /opt/renfe/',
+    'setup.step7.title': 'Load stations catalog',
+    'setup.step7.desc': 'Only needed once for long distance trains.',
+    'setup.step8.title': 'Verify the service',
+    'setup.step9.title': 'Watch logs in real time',
+
+    // Query
+    'query.title': 'Querying the Data',
+    'query.subtitle': 'Data is accessible from any SQL client or directly with Python/pandas',
+    'query.clients.title': 'Compatible clients',
+    'query.clients.note': 'Add your local IP to Azure SQL firewall: Portal → SQL Server → Networking → Firewall rules',
+    'query.sql.title': 'Sample T-SQL queries',
+    'query.python.title': 'Python / pandas',
+
+    // Analysis
+    'analysis.title': 'Analysis and Machine Learning',
+    'analysis.subtitle': 'Ideal dataset for public transport analysis, delay prediction and ML models',
+    'analysis.col.analysis': 'Analysis',
+    'analysis.col.data': 'Required data',
+    'analysis.col.tables': 'Tables',
+    'analysis.delay.name': 'Delay prediction',
+    'analysis.delay.data': 'arrival_delay + hour + day + line',
+    'analysis.speed.name': 'Average speed by segment',
+    'analysis.speed.data': 'speed + consecutive stop_id',
+    'analysis.punctuality.name': 'Historical punctuality',
+    'analysis.punctuality.data': 'arrival_delay + date grouped',
+    'analysis.eta.name': 'Long distance ETA prediction',
+    'analysis.eta.data': 'ult_retraso + hora_llegada_sig_est',
+    'analysis.anomaly.name': 'Speed anomalies',
+    'analysis.anomaly.data': 'speed out of normal range per segment',
+    'analysis.pattern.name': 'Patterns by time of day',
+    'analysis.pattern.data': 'arrival_delay + hour of captured_at',
+    'analysis.route.name': 'Route reconstruction',
+    'analysis.route.data': 'lat, lon, bearing sorted by time',
+    'analysis.summary': 'View statistical summary',
+
+    // Footer
+    'footer.license': 'Renfe data under CC BY 4.0 license',
+    'footer.academic': 'Academic project',
+    'footer.built': 'Built with Python, Azure and lots of coffee',
+  }
+};
+
+let currentLang = localStorage.getItem('renfe-lang') || 'es';
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || key;
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (TRANSLATIONS[currentLang][key] !== undefined) {
+      el.textContent = TRANSLATIONS[currentLang][key];
+    }
+  });
+  document.documentElement.lang = currentLang;
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('renfe-lang', lang);
+  applyTranslations();
+
+  // Update active state on toggle buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyTranslations();
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+  });
+});

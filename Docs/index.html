@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Renfe Real-Time Scraper — Sistema de Captura de Trenes</title>
+  <meta name="description" content="Sistema autónomo de scraping en tiempo real para datos de trenes Renfe. Captura posiciones GPS, retrasos y alertas. Almacena en Azure SQL Database." />
+  <meta property="og:title" content="Renfe Real-Time Train Scraper" />
+  <meta property="og:description" content="Open source real-time train data capture system for Renfe (Spain). GPS positions, delays, alerts. Azure SQL + Python." />
+  <meta property="og:image" content="https://opengraph.githubassets.com/1/David01mc/ScrapingWebRenfe" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Prism.js syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+
+  <!-- Our styles -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-brand">
+      <span class="train-icon"><i class="fas fa-train"></i></span>
+      <span class="brand-name">Renfe<span class="brand-accent">Scraper</span></span>
+    </a>
+
+    <ul class="nav-menu" id="nav-menu">
+      <li><a href="#how"          class="nav-link" data-i18n="nav.how">Cómo funciona</a></li>
+      <li><a href="#architecture" class="nav-link" data-i18n="nav.architecture">Arquitectura</a></li>
+      <li><a href="#data"         class="nav-link" data-i18n="nav.data">Datos</a></li>
+      <li><a href="#optimization" class="nav-link" data-i18n="nav.optimization">Optimización</a></li>
+      <li><a href="#setup"        class="nav-link" data-i18n="nav.setup">Instalación</a></li>
+      <li><a href="#analysis"     class="nav-link" data-i18n="nav.analysis">Análisis</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="lang-toggle">
+        <button class="lang-btn" data-lang="es">🇪🇸 ES</button>
+        <button class="lang-btn" data-lang="en">🇬🇧 EN</button>
+      </div>
+      <button id="burger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────────────────── -->
+<section id="hero">
+  <canvas id="particles"></canvas>
+  <div class="hero-content">
+    <div class="hero-badges">
+      <span class="badge badge-python">Python 3.x</span>
+      <span class="badge badge-azure">Azure SQL</span>
+      <span class="badge badge-linux">Ubuntu 22.04</span>
+      <span class="badge badge-gtfs">GTFS-RT</span>
+      <span class="badge" style="border-color:#f05133;color:#f05133">systemd</span>
+    </div>
+
+    <h1 class="hero-title">
+      <span class="typewriter" data-text="Captura de Trenes Renfe">Captura de Trenes Renfe</span>
+    </h1>
+
+    <p class="hero-subtitle" data-i18n="hero.subtitle">
+      Sistema autónomo de scraping en tiempo real.
+    </p>
+
+    <div class="hero-cta">
+      <a href="https://github.com/David01mc/ScrapingWebRenfe" target="_blank" class="btn btn-primary">
+        <i class="fab fa-github"></i>
+        <span data-i18n="hero.cta.github">Ver en GitHub</span>
+      </a>
+      <a href="https://github.com/David01mc/ScrapingWebRenfe/archive/refs/heads/main.zip" class="btn btn-secondary">
+        <i class="fas fa-download"></i>
+        <span data-i18n="hero.cta.download">Descargar ZIP</span>
+      </a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>scroll</span>
+    <i class="fas fa-arrow-down"></i>
+  </div>
+</section>
+
+<!-- ── Stats ────────────────────────────────────────────────────────────── -->
+<section id="stats">
+  <div class="container">
+    <p class="stats-title" data-i18n="stats.title">El proyecto en números</p>
+    <div class="stats-grid">
+      <div class="stat-card fade-in">
+        <div class="stat-number counter" data-target="8">0</div>
+        <div class="stat-label" data-i18n="stats.tables.label">Tablas en Azure SQL</div>
+      </div>
+      <div class="stat-card fade-in">
+        <div class="stat-number counter" data-target="30">0</div>
+        <div class="stat-label" data-i18n="stats.interval.label">segundos entre capturas</div>
+      </div>
+      <div class="stat-card fade-in">
+        <div class="stat-number counter" data-target="12000" data-suffix="+">0</div>
+        <div class="stat-label" data-i18n="stats.rows.label">filas por flush</div>
+      </div>
+      <div class="stat-card fade-in">
+        <div class="stat-number counter" data-target="3">0</div>
+        <div class="stat-label" data-i18n="stats.zones.label">zonas geográficas</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ─────────────────────────────────────────────────────── -->
+<section id="how">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="how.title">Cómo funciona</h2>
+      <p data-i18n="how.subtitle">Un único proceso Python captura, procesa y almacena datos de trenes en tiempo real</p>
+    </div>
+    <div class="steps">
+      <div class="step-card fade-in">
+        <div class="step-number">1</div>
+        <div class="step-icon"><i class="fas fa-satellite-dish"></i></div>
+        <h3 data-i18n="how.step1.title">Captura</h3>
+        <p data-i18n="how.step1.desc">Peticiones HTTP cada 30 segundos a los feeds oficiales GTFS-RT de Renfe. Posiciones GPS, retrasos por parada y alertas de servicio.</p>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-number">2</div>
+        <div class="step-icon"><i class="fas fa-gears"></i></div>
+        <h3 data-i18n="how.step2.title">Procesa</h3>
+        <p data-i18n="how.step2.desc">Filtrado geográfico por bounding box, cálculo de velocidad y bearing mediante Haversine. Todo en memoria RAM sin tocar la base de datos.</p>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-number">3</div>
+        <div class="step-icon"><i class="fas fa-database"></i></div>
+        <h3 data-i18n="how.step3.title">Almacena</h3>
+        <p data-i18n="how.step3.desc">Flush a Azure SQL cada 4 horas con una única conexión. La base de datos entra en auto-pause entre flushes, minimizando el consumo del tier gratuito.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Architecture ─────────────────────────────────────────────────────── -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="arch.title">Arquitectura del Sistema</h2>
+      <p data-i18n="arch.subtitle">Un script unificado gestiona las tres fuentes de datos y optimiza el consumo de Azure SQL mediante batching en memoria</p>
+    </div>
+
+    <!-- Custom SVG Architecture Diagram with animated data flow -->
+    <div class="arch-diagram-wrapper fade-in">
+      <svg class="arch-svg" viewBox="0 0 680 775" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de arquitectura Renfe Scraper">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/>
+          </marker>
+          <filter id="glow-teal" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="2.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow-orange" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- ── LABEL FUENTES ── -->
+        <text x="340" y="14" text-anchor="middle" fill="#4b5563" font-size="10" font-family="monospace" letter-spacing="2">FUENTES DE DATOS</text>
+
+        <!-- ── SOURCE: gtfsrt.renfe.com ── -->
+        <a href="https://gtfsrt.renfe.com/vehicle_positions.json" target="_blank">
+          <rect x="20" y="22" width="205" height="72" rx="8" fill="#1c0d00" stroke="#d97706" stroke-width="2" class="arch-node"/>
+          <text x="122" y="46" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="bold" font-family="monospace">gtfsrt.renfe.com</text>
+          <text x="122" y="62" text-anchor="middle" fill="#78350f" font-size="9.5" font-family="monospace">Positions · trips · alerts</text>
+          <text x="122" y="78" text-anchor="middle" fill="#4b5563" font-size="9" font-family="monospace">↻ actualización cada ~20s</text>
+        </a>
+
+        <!-- ── SOURCE: Largo Recorrido API ── -->
+        <a href="https://tiempo-real.largorecorrido.renfe.com/renfe-visor/flotaLD.json" target="_blank">
+          <rect x="455" y="22" width="205" height="72" rx="8" fill="#1c0d00" stroke="#d97706" stroke-width="2" class="arch-node"/>
+          <text x="557" y="46" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="bold" font-family="monospace">Largo Recorrido API</text>
+          <text x="557" y="62" text-anchor="middle" fill="#78350f" font-size="9.5" font-family="monospace">Flota · itinerarios · estaciones</text>
+          <text x="557" y="78" text-anchor="middle" fill="#4b5563" font-size="9" font-family="monospace">↻ actualización cada ~15s</text>
+        </a>
+
+        <!-- ── LABEL HTTP GET ── -->
+        <text x="340" y="110" text-anchor="middle" fill="#6b7280" font-size="9.5" font-family="monospace">HTTP GET cada 30s (requests)</text>
+
+        <!-- Connector paths sources → VM -->
+        <path id="p-gtfs-vm" d="M122,94 C122,116 240,116 240,132" fill="none" stroke="#4b5563" stroke-width="1.5"/>
+        <path id="p-lr-vm"   d="M557,94 C557,116 440,116 440,132" fill="none" stroke="#4b5563" stroke-width="1.5"/>
+
+        <!-- ── AZURE VM BOX ── -->
+        <rect x="10" y="130" width="660" height="298" rx="12" fill="#060e1a" stroke="#1d4ed8" stroke-width="2.5"/>
+        <rect x="10" y="130" width="660" height="48" rx="12" fill="#0d1f3a"/>
+        <rect x="10" y="166" width="660" height="12" fill="#0d1f3a"/>
+        <text x="340" y="152" text-anchor="middle" fill="#60a5fa" font-size="12" font-weight="bold" font-family="monospace">Azure VM — Standard B1s</text>
+        <text x="340" y="169" text-anchor="middle" fill="#6b7280" font-size="9.5" font-family="monospace">Ubuntu 22.04  ·  systemd  ·  renfe_capture.py</text>
+
+        <!-- Inner: Cercanías Asturias -->
+        <rect x="25" y="184" width="175" height="56" rx="8" fill="#071a0f" stroke="#166534" stroke-width="1.5"/>
+        <text x="112" y="208" text-anchor="middle" fill="#86efac" font-size="11" font-weight="bold" font-family="monospace">Cercanías Asturias</text>
+        <text x="112" y="224" text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">BBox lat 43–43.7</text>
+
+        <!-- Inner: Cercanías Cádiz -->
+        <rect x="253" y="184" width="175" height="56" rx="8" fill="#071a0f" stroke="#166534" stroke-width="1.5"/>
+        <text x="340" y="208" text-anchor="middle" fill="#86efac" font-size="11" font-weight="bold" font-family="monospace">Cercanías Cádiz</text>
+        <text x="340" y="224" text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">BBox lat 36.3–37.5</text>
+
+        <!-- Inner: Largo Recorrido -->
+        <rect x="481" y="184" width="175" height="56" rx="8" fill="#071a0f" stroke="#166534" stroke-width="1.5"/>
+        <text x="568" y="208" text-anchor="middle" fill="#86efac" font-size="11" font-weight="bold" font-family="monospace">Largo Recorrido</text>
+        <text x="568" y="224" text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">~145 trenes activos</text>
+
+        <!-- Paths sub-boxes → Batch -->
+        <path id="p-ast-b" d="M112,240 L112,260 L252,260 L252,274" fill="none" stroke="#4b5563" stroke-width="1.2" marker-end="url(#arr)"/>
+        <path id="p-cdz-b" d="M340,240 L340,274"                   fill="none" stroke="#4b5563" stroke-width="1.2" marker-end="url(#arr)"/>
+        <path id="p-lr-b"  d="M568,240 L568,260 L428,260 L428,274" fill="none" stroke="#4b5563" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- Inner: Batch en memoria RAM -->
+        <rect x="215" y="274" width="250" height="56" rx="8" fill="#130a24" stroke="#6d28d9" stroke-width="1.5"/>
+        <text x="340" y="298" text-anchor="middle" fill="#c4b5fd" font-size="12" font-weight="bold" font-family="monospace">Batch en memoria (RAM)</text>
+        <text x="340" y="314" text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">480 ciclos × 30s = 4 horas</text>
+        <text x="472" y="295" fill="#4b5563" font-size="8.5" font-family="monospace">← 480 ciclos</text>
+        <text x="472" y="309" fill="#4b5563" font-size="8.5" font-family="monospace">   × 30s = 4h</text>
+
+        <!-- Path Batch → azure_db -->
+        <path id="p-b-db" d="M340,330 L340,356" fill="none" stroke="#4b5563" stroke-width="1.2" marker-end="url(#arr)"/>
+
+        <!-- Inner: azure_db.py -->
+        <rect x="215" y="356" width="250" height="56" rx="8" fill="#130a24" stroke="#6d28d9" stroke-width="1.5"/>
+        <text x="340" y="380" text-anchor="middle" fill="#c4b5fd" font-size="12" font-weight="bold" font-family="monospace">azure_db.py (pyodbc)</text>
+        <text x="340" y="396" text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">ODBC Driver 18 · TCP 1433</text>
+
+        <!-- Path azure_db → SQL (dashed orange = flush) -->
+        <path id="p-db-sql" d="M340,412 L340,458" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+        <text x="356" y="442" fill="#d97706" font-size="9" font-family="monospace">Flush cada 4h · ~12k filas</text>
+
+        <!-- ── AZURE SQL BOX ── -->
+        <rect x="10" y="458" width="660" height="178" rx="12" fill="#110900" stroke="#d97706" stroke-width="2.5"/>
+        <rect x="10" y="458" width="660" height="48" rx="12" fill="#1c0f00"/>
+        <rect x="10" y="494" width="660" height="12" fill="#1c0f00"/>
+        <text x="340" y="480" text-anchor="middle" fill="#f59e0b" font-size="12" font-weight="bold" font-family="monospace">Azure SQL Database — Serverless</text>
+        <text x="340" y="497" text-anchor="middle" fill="#a16207" font-size="9.5" font-family="monospace">Gen5  ·  1 vCore  ·  100k vCore-s/mes  ·  free tier</text>
+
+        <!-- DB: Asturias -->
+        <rect x="25" y="540" width="185" height="62" rx="8" fill="#1c2128" stroke="#374151" stroke-width="1.5"/>
+        <text x="117" y="566" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="bold" font-family="monospace">Asturias</text>
+        <text x="117" y="582" text-anchor="middle" fill="#6b7280" font-size="9" font-family="monospace">3 tablas</text>
+
+        <!-- DB: Cádiz -->
+        <rect x="248" y="540" width="185" height="62" rx="8" fill="#1c2128" stroke="#374151" stroke-width="1.5"/>
+        <text x="340" y="566" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="bold" font-family="monospace">Cádiz</text>
+        <text x="340" y="582" text-anchor="middle" fill="#6b7280" font-size="9" font-family="monospace">3 tablas</text>
+
+        <!-- DB: Largo Recorrido -->
+        <rect x="470" y="540" width="185" height="62" rx="8" fill="#1c2128" stroke="#374151" stroke-width="1.5"/>
+        <text x="562" y="566" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="bold" font-family="monospace">Largo Recorrido</text>
+        <text x="562" y="582" text-anchor="middle" fill="#6b7280" font-size="9" font-family="monospace">2 tablas + stations</text>
+
+        <!-- Path SQL → PC -->
+        <path id="p-sql-pc" d="M340,636 L340,660" fill="none" stroke="#4b5563" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="356" y="651" fill="#6b7280" font-size="9" font-family="monospace">SSMS / pandas / Jupyter</text>
+
+        <!-- ── PC LOCAL BOX ── -->
+        <rect x="185" y="660" width="310" height="70" rx="10" fill="#161b22" stroke="#374151" stroke-width="2"/>
+        <text x="340" y="682" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="bold" font-family="monospace">PC local (desarrollo)</text>
+        <text x="340" y="698" text-anchor="middle" fill="#4b5563" font-size="9.5" font-family="monospace">VS Code + Claude Code · Azure Data Studio</text>
+
+        <!-- ── FOOTER NOTE ── -->
+        <text x="340" y="752" text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">⏸ Pausa nocturna: 23:00–06:00 UTC  ·  Auto-pause tras 1h sin conexiones</text>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- ── ANIMATED DATA PACKETS ──            -->
+        <!-- ═══════════════════════════════════════ -->
+
+        <!-- gtfsrt → VM: teal dots -->
+        <circle r="4" fill="#d62d61" filter="url(#glow-teal)">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="0s"><mpath href="#p-gtfs-vm"/></animateMotion>
+        </circle>
+        <circle r="4" fill="#d62d61" filter="url(#glow-teal)">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.1s"><mpath href="#p-gtfs-vm"/></animateMotion>
+        </circle>
+
+        <!-- largo API → VM: teal dots -->
+        <circle r="4" fill="#d62d61" filter="url(#glow-teal)">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="0.4s"><mpath href="#p-lr-vm"/></animateMotion>
+        </circle>
+        <circle r="4" fill="#d62d61" filter="url(#glow-teal)">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.5s"><mpath href="#p-lr-vm"/></animateMotion>
+        </circle>
+
+        <!-- Asturias → Batch: blue dots -->
+        <circle r="3" fill="#60a5fa">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="0s"><mpath href="#p-ast-b"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#60a5fa">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.8s"><mpath href="#p-ast-b"/></animateMotion>
+        </circle>
+
+        <!-- Cádiz → Batch: blue dots -->
+        <circle r="3" fill="#60a5fa">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.3s"><mpath href="#p-cdz-b"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#60a5fa">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="1.1s"><mpath href="#p-cdz-b"/></animateMotion>
+        </circle>
+
+        <!-- Largo inner → Batch: blue dots -->
+        <circle r="3" fill="#60a5fa">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.6s"><mpath href="#p-lr-b"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#60a5fa">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="1.4s"><mpath href="#p-lr-b"/></animateMotion>
+        </circle>
+
+        <!-- Batch → azure_db: purple dots (lento = acumulando en RAM) -->
+        <circle r="3.5" fill="#c4b5fd">
+          <animateMotion dur="4s" repeatCount="indefinite" begin="0s"><mpath href="#p-b-db"/></animateMotion>
+        </circle>
+        <circle r="3.5" fill="#c4b5fd">
+          <animateMotion dur="4s" repeatCount="indefinite" begin="2s"><mpath href="#p-b-db"/></animateMotion>
+        </circle>
+
+        <!-- azure_db → SQL: orange dots (bigger = flush packet) -->
+        <circle r="5.5" fill="#f59e0b" filter="url(#glow-orange)">
+          <animateMotion dur="3.5s" repeatCount="indefinite" begin="0s"><mpath href="#p-db-sql"/></animateMotion>
+        </circle>
+        <circle r="5.5" fill="#f59e0b" filter="url(#glow-orange)">
+          <animateMotion dur="3.5s" repeatCount="indefinite" begin="1.75s"><mpath href="#p-db-sql"/></animateMotion>
+        </circle>
+
+        <!-- SQL → PC: gray dots -->
+        <circle r="3" fill="#9ca3af">
+          <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath href="#p-sql-pc"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#9ca3af">
+          <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath href="#p-sql-pc"/></animateMotion>
+        </circle>
+
+      </svg>
+    </div>
+
+    <!-- Data flow detail table -->
+    <div class="flow-detail fade-in">
+      <h3 data-i18n="arch.flow.title">Flujo de Datos Detallado</h3>
+      <table class="flow-table">
+        <tr>
+          <td>vehicle_positions.json</td>
+          <td>→ Filtra por BBox → Calcula speed/bearing (Haversine + caché) → <code>asturias/cadiz_vehicle_snapshots</code></td>
+        </tr>
+        <tr>
+          <td>trip_updates.json</td>
+          <td>→ Filtra por trip_id conocidos (en memoria) → <code>asturias/cadiz_trip_updates</code></td>
+        </tr>
+        <tr>
+          <td>alerts.json</td>
+          <td>→ Filtra por keywords geográficos → <code>asturias/cadiz_service_alerts</code></td>
+        </tr>
+        <tr>
+          <td>flotaLD.json</td>
+          <td>→ Todos los trenes LD de España → Calcula speed/bearing → <code>train_snapshots</code></td>
+        </tr>
+        <tr>
+          <td>trenesConEstacionesLD</td>
+          <td>→ Solo trenes nuevos (1 vez por tren/día) → <code>train_itineraries</code></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Tech stack -->
+    <div class="tech-grid fade-in" style="margin-top:40px">
+      <div class="tech-card">
+        <div class="tech-name" data-i18n="arch.tech.capture">Captura HTTP</div>
+        <div class="tech-stack">requests</div>
+        <div class="tech-desc" data-i18n="arch.tech.capture.desc">GET cada 30s a Renfe</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name" data-i18n="arch.tech.parse">Parseo</div>
+        <div class="tech-stack">Python dict nativo</div>
+        <div class="tech-desc" data-i18n="arch.tech.parse.desc">JSON → tuplas → batch RAM</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name" data-i18n="arch.tech.speed">Velocidad</div>
+        <div class="tech-stack">Haversine + cache</div>
+        <div class="tech-desc" data-i18n="arch.tech.speed.desc">Haversine + caché en memoria</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name" data-i18n="arch.tech.db">Persistencia</div>
+        <div class="tech-stack">pyodbc · ODBC Driver 18</div>
+        <div class="tech-desc" data-i18n="arch.tech.db.desc">Flush 4h, 1 conexión</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name" data-i18n="arch.tech.vm">Ejecución</div>
+        <div class="tech-stack">systemd · Ubuntu 22.04</div>
+        <div class="tech-desc" data-i18n="arch.tech.vm.desc">systemd, auto-restart</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name" data-i18n="arch.tech.logs">Logs</div>
+        <div class="tech-stack">renfe-capture.log</div>
+        <div class="tech-desc" data-i18n="arch.tech.logs.desc">/opt/renfe/renfe-capture.log</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Data sources ──────────────────────────────────────────────────────── -->
+<section id="data">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="data.title">Datos Capturados</h2>
+      <p data-i18n="data.subtitle">Tres fuentes de datos oficiales de Renfe (licencia CC BY 4.0), filtradas geográficamente y almacenadas con esquema optimizado</p>
+    </div>
+
+    <div class="data-grid">
+      <!-- Asturias -->
+      <div class="data-card fade-in">
+        <div class="data-card-header">
+          <div class="zone-icon"><i class="fas fa-mountain"></i></div>
+          <h3 data-i18n="data.asturias.title">Cercanías Asturias</h3>
+          <span class="data-card-badge">C1 · C2 · C3 · C4</span>
+        </div>
+        <div class="data-card-body">
+          <p data-i18n="data.asturias.desc">Red de cercanías del norte de España. Filtrado por bounding box geográfico.</p>
+          <div class="data-meta">
+            <div class="meta-item"><span class="meta-icon"><i class="fas fa-location-crosshairs"></i></span><span data-i18n="data.asturias.bbox">Zona: lat 43.0–43.7 / lon -7.0–-4.5</span></div>
+            <div class="meta-item"><span class="meta-icon"><i class="fas fa-layer-group"></i></span><span data-i18n="data.asturias.tables">3 tablas: snapshots, trip_updates, alerts</span></div>
+          </div>
+          <div class="data-snapshot">
+            <div class="snapshot-label" data-i18n="data.snapshot.label">Ejemplo de dato capturado</div>
+            <div class="snapshot-content">trip_id: "3015L23533C1"<br>vehicle_id: "23533"<br>line: "C1"<br>lat: 43.4745 / lon: -5.8631<br>speed: 82.4 km/h<br>bearing: 124.3°<br>status: IN_TRANSIT_TO<br>stop_id: "15301"</div>
+          </div>
+          <div class="data-fields">
+            <h4 data-i18n="data.fields.title">Campos principales</h4>
+            <span class="field-tag">latitude</span>
+            <span class="field-tag">longitude</span>
+            <span class="field-tag">speed</span>
+            <span class="field-tag">bearing</span>
+            <span class="field-tag">line</span>
+            <span class="field-tag">current_status</span>
+            <span class="field-tag">arrival_delay</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cádiz -->
+      <div class="data-card fade-in">
+        <div class="data-card-header">
+          <div class="zone-icon"><i class="fas fa-anchor"></i></div>
+          <h3 data-i18n="data.cadiz.title">Cercanías Cádiz</h3>
+          <span class="data-card-badge">C1 · C2</span>
+        </div>
+        <div class="data-card-body">
+          <p data-i18n="data.cadiz.desc">Red de cercanías de la Bahía de Cádiz. Filtrado por bounding box geográfico.</p>
+          <div class="data-meta">
+            <div class="meta-item"><span class="meta-icon"><i class="fas fa-location-crosshairs"></i></span><span data-i18n="data.cadiz.bbox">Zona: lat 36.3–37.5 / lon -6.5–-5.7</span></div>
+            <div class="meta-item"><span class="meta-icon"><i class="fas fa-layer-group"></i></span><span data-i18n="data.cadiz.tables">3 tablas: snapshots, trip_updates, alerts</span></div>
+          </div>
+          <div class="data-snapshot">
+            <div class="snapshot-label" data-i18n="data.snapshot.label">Ejemplo de dato capturado</div>
+            <div class="snapshot-content">trip_id: "8050L80241C1"<br>vehicle_id: "80241"<br>line: "C1"<br>lat: 36.5321 / lon: -6.2847<br>speed: 45.2 km/h<br>bearing: 234.1°<br>status: STOPPED_AT<br>stop_id: "50701"</div>
+          </div>
+          <div class="data-fields">
+            <h4 data-i18n="data.fields.title">Campos principales</h4>
+            <span class="field-tag">latitude</span>
+            <span class="field-tag">longitude</span>
+            <span class="field-tag">speed</span>
+            <span class="field-tag">bearing</span>
+            <span class="field-tag">line</span>
+            <span class="field-tag">current_status</span>
+            <span class="field-tag">arrival_delay</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Largo Recorrido -->
+      <div class="data-card fade-in">
+        <div class="data-card-header">
+          <div class="zone-icon"><i class="fas fa-train"></i></div>
+          <h3 data-i18n="data.largo.title">Largo Recorrido</h3>
+          <span class="data-card-badge">AVE · Alvia · Avant · Intercity</span>
+        </div>
+        <div class="data-card-body">
+          <p data-i18n="data.largo.desc">Todos los trenes AVE, Alvia, Avant e Intercity de toda España. Sin filtro geográfico.</p>
+          <div class="data-meta">
+            <div class="meta-item"><span class="meta-icon"><i class="fas fa-globe"></i></span><span data-i18n="data.largo.bbox">Cobertura: toda España (~145 trenes activos)</span></div>
+            <div class="meta-item"><span class="meta-icon"><i class="fas fa-layer-group"></i></span><span data-i18n="data.largo.tables">3 tablas: train_snapshots, itineraries, stations</span></div>
+          </div>
+          <div class="data-snapshot">
+            <div class="snapshot-label" data-i18n="data.snapshot.label">Ejemplo de dato capturado</div>
+            <div class="snapshot-content">cod_comercial: "01601"<br>tipo_tren: "AVE"<br>des_corridor: "Madrid-Cádiz"<br>lat: 38.9847 / lon: -3.9284<br>speed: 287.3 km/h<br>bearing: 198.4°<br>ult_retraso: 2 min<br>sig_estacion: "SEVILLA"</div>
+          </div>
+          <div class="data-fields">
+            <h4 data-i18n="data.fields.title">Campos principales</h4>
+            <span class="field-tag">latitude</span>
+            <span class="field-tag">longitude</span>
+            <span class="field-tag">speed</span>
+            <span class="field-tag">bearing</span>
+            <span class="field-tag">tipo_tren</span>
+            <span class="field-tag">ult_retraso</span>
+            <span class="field-tag">des_corridor</span>
+            <span class="field-tag">hora_llegada_sig_est</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Optimization ──────────────────────────────────────────────────────── -->
+<section id="optimization">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="opt.title">Optimización de Consumo Azure SQL</h2>
+      <p data-i18n="opt.subtitle">La evolución del sistema desde conexión persistente hasta batch de 4 horas redujo el consumo un 95%</p>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container fade-in">
+      <p class="chart-title" data-i18n="opt.chart.title">Consumo mensual por versión (vCore-segundos) — escala logarítmica</p>
+      <div class="chart-wrapper">
+        <canvas id="vcoreChart"></canvas>
+      </div>
+      <p class="opt-limit-note" data-i18n="opt.limit">Límite gratuito: 100.000 vCore-s/mes</p>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="opt-table-wrapper fade-in">
+      <table class="opt-table">
+        <thead>
+          <tr>
+            <th data-i18n="opt.table.version">Versión</th>
+            <th data-i18n="opt.table.strategy">Estrategia</th>
+            <th data-i18n="opt.table.consumption">Consumo/mes</th>
+            <th data-i18n="opt.table.status">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="version-badge v1">V1</span></td>
+            <td data-i18n="opt.v1.strategy">3 scripts, conexión persistente</td>
+            <td style="font-family:var(--font-mono)">~900.000</td>
+            <td><span class="status-bad">✗ Agotado en 2 días</span></td>
+          </tr>
+          <tr>
+            <td><span class="version-badge v2">V2</span></td>
+            <td data-i18n="opt.v2.strategy">1 script, flush cada 20 min — BD activa 24h sin auto-pause</td>
+            <td style="font-family:var(--font-mono)">~850.000</td>
+            <td><span class="status-bad">✗ Peor que V1</span></td>
+          </tr>
+          <tr>
+            <td><span class="version-badge v3">V3</span></td>
+            <td data-i18n="opt.v3.strategy">1 script, flush 2h + pausa nocturna</td>
+            <td style="font-family:var(--font-mono)">~80.000</td>
+            <td><span class="status-warn">⚠ Límite cercano</span></td>
+          </tr>
+          <tr>
+            <td><span class="version-badge v4">V4</span></td>
+            <td data-i18n="opt.v4.strategy">1 script, flush 4h + pausa nocturna</td>
+            <td style="font-family:var(--font-mono)">~45.000</td>
+            <td><span class="status-ok">✓ PRODUCCIÓN</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cycle and night cards -->
+    <div class="opt-cards fade-in">
+      <div class="opt-card">
+        <h3><i class="fas fa-stopwatch"></i> <span data-i18n="opt.cycle.title">Ciclo de consumo con flush cada 4h</span></h3>
+        <div class="cycle-steps">
+          <div class="cycle-step active">
+            <div><i class="fas fa-bolt"></i></div>
+            <div data-i18n="opt.cycle.flush">Flush (~60s activa)</div>
+          </div>
+          <div class="cycle-step cooling">
+            <div><i class="fas fa-temperature-half"></i></div>
+            <div data-i18n="opt.cycle.cooling">Enfriamiento (~60 min)</div>
+          </div>
+          <div class="cycle-step pause">
+            <div><i class="fas fa-bed"></i></div>
+            <div data-i18n="opt.cycle.pause">Auto-pause (~3h)</div>
+          </div>
+        </div>
+      </div>
+      <div class="opt-card">
+        <h3><i class="fas fa-moon"></i> <span data-i18n="opt.night.title">Pausa nocturna automática</span></h3>
+        <p data-i18n="opt.night.desc" style="color:var(--text-muted);font-size:0.88rem;margin-bottom:16px">Entre las 23:00 y 06:00 UTC no hay capturas ni conexiones.</p>
+        <div class="opt-night-bar">
+          <div class="night-active">06:00 ──── 17h activas ──── 23:00</div>
+          <div class="night-pause"><i class="fas fa-moon"></i> 7h pausa</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Speed calculation ─────────────────────────────────────────────────── -->
+<section id="speed">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="speed.title">Cálculo de Velocidad y Bearing</h2>
+      <p data-i18n="speed.subtitle">Renfe no publica velocidad ni rumbo en sus feeds. El sistema los calcula derivándolos de snapshots consecutivos mediante Haversine</p>
+    </div>
+
+    <div class="speed-grid fade-in">
+      <div class="info-card">
+        <h3 data-i18n="speed.problem.title">El problema</h3>
+        <p data-i18n="speed.problem.desc">El API GTFS-RT de Renfe incluye solo latitud y longitud. Para cercanías, las coordenadas GPS se actualizan cada 2-10 minutos (no cada 20s como el feed), lo que requiere compensación temporal.</p>
+      </div>
+      <div class="info-card">
+        <h3 data-i18n="speed.algo.title">Algoritmo</h3>
+        <div class="algo-steps">
+          <div class="algo-step"><span class="step-n">1</span><span data-i18n="speed.algo.step1">Obtener posición anterior de _position_cache (sin BD)</span></div>
+          <div class="algo-step"><span class="step-n">2</span><span data-i18n="speed.algo.step2">Si posición no cambió (Δlat &lt; 0.0001): speed = NULL</span></div>
+          <div class="algo-step"><span class="step-n">3</span><span data-i18n="speed.algo.step3">Si cambió: buscar en _first_pos_cache cuándo fue la primera vez</span></div>
+          <div class="algo-step"><span class="step-n">4</span><span data-i18n="speed.algo.step4">speed = distancia_Haversine / tiempo_real_transcurrido</span></div>
+          <div class="algo-step"><span class="step-n">5</span><span data-i18n="speed.algo.step5">Filtrar: &lt; 0.5 km/h → NULL | &gt; 200 km/h cercanías → NULL</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Haversine code -->
+    <div class="fade-in">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">python</span>
+          <button class="copy-btn"><i class="fas fa-copy"></i></button>
+        </div>
+        <pre><code class="language-python">def haversine_km(lat1, lon1, lat2, lon2):
+    """Distancia en km entre dos coordenadas GPS (fórmula Haversine)."""
+    R = 6371  # radio Tierra en km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) ** 2 +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+         math.sin(dlon / 2) ** 2)
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+def calculate_bearing(lat1, lon1, lat2, lon2):
+    """Rumbo en grados (0-360°) desde el punto 1 al punto 2."""
+    lat1_r, lat2_r = math.radians(lat1), math.radians(lat2)
+    dlon_r = math.radians(lon2 - lon1)
+    x = math.sin(dlon_r) * math.cos(lat2_r)
+    y = (math.cos(lat1_r) * math.sin(lat2_r) -
+         math.sin(lat1_r) * math.cos(lat2_r) * math.cos(dlon_r))
+    return math.degrees(math.atan2(x, y)) % 360</code></pre>
+      </div>
+    </div>
+
+    <!-- Cache explanation -->
+    <div class="cache-cards fade-in" style="margin-top:32px">
+      <div class="cache-card">
+        <div class="cache-name">_position_cache</div>
+        <p data-i18n="speed.cache.pos">Última posición conocida por vehicle_id</p>
+      </div>
+      <div class="cache-card">
+        <div class="cache-name">_first_pos_cache</div>
+        <p data-i18n="speed.cache.first">Primera vez capturada por vehicle_id + posición</p>
+      </div>
+      <div class="cache-card">
+        <div class="cache-name">Sin BD</div>
+        <p data-i18n="speed.cache.note">Ambos cachés viven toda la sesión del proceso. Sin consultas a la BD.</p>
+      </div>
+    </div>
+    <div class="cache-note fade-in" data-i18n="speed.cache.note" style="margin-top:16px">
+      Ambos cachés viven toda la sesión del proceso. Sin consultas a la BD.
+    </div>
+
+    <!-- Interactive Haversine Calculator -->
+    <div class="haversine-calc fade-in">
+      <h3><i class="fas fa-calculator"></i> Calculadora Interactiva — Prueba el algoritmo</h3>
+      <p class="calc-desc">
+        Cada preset simula <strong>dos snapshots GPS consecutivos reales</strong> capturados con 30 segundos de diferencia —
+        exactamente lo que almacena el script en <code>vehicle_snapshots</code>.
+        Las diferencias de coordenadas son de metros, no de kilómetros.
+      </p>
+
+      <div class="calc-presets">
+        <button class="preset-btn active"
+          data-lat1="43.36140" data-lon1="-5.84550"
+          data-lat2="43.36754" data-lon2="-5.84102">
+          <i class="fas fa-train"></i> C1 Asturias en marcha (~80 km/h)
+        </button>
+        <button class="preset-btn"
+          data-lat1="38.98400" data-lon1="-3.92400"
+          data-lat2="39.00585" data-lon2="-3.91500">
+          <i class="fas fa-train"></i> AVE a plena velocidad (~290 km/h)
+        </button>
+        <button class="preset-btn"
+          data-lat1="36.53210" data-lon1="-6.28470"
+          data-lat2="36.53440" data-lon2="-6.28210">
+          <i class="fas fa-train"></i> C1 Cádiz acelerando (~25 km/h)
+        </button>
+        <button class="preset-btn"
+          data-lat1="43.36140" data-lon1="-5.84550"
+          data-lat2="43.36140" data-lon2="-5.84550">
+          <i class="fas fa-circle-stop"></i> Tren parado en estación (0 km/h)
+        </button>
+      </div>
+
+      <div class="calc-body">
+        <div class="calc-inputs">
+          <div class="calc-point">
+            <div class="calc-point-label" style="color:var(--accent)"><i class="fas fa-map-pin"></i> Punto A</div>
+            <label>Latitud <input type="number" id="hav-lat1" step="0.00001" value="43.36140"></label>
+            <label>Longitud <input type="number" id="hav-lon1" step="0.00001" value="-5.84550"></label>
+          </div>
+          <div class="calc-arrow"><i class="fas fa-right-long"></i></div>
+          <div class="calc-point">
+            <div class="calc-point-label" style="color:#f85149"><i class="fas fa-map-pin"></i> Punto B  <span style="color:var(--text-muted);font-weight:400">(30s después)</span></div>
+            <label>Latitud <input type="number" id="hav-lat2" step="0.00001" value="43.36754"></label>
+            <label>Longitud <input type="number" id="hav-lon2" step="0.00001" value="-5.84102"></label>
+          </div>
+        </div>
+
+        <div class="calc-results">
+          <div class="calc-result-card">
+            <div class="calc-result-icon"><i class="fas fa-route"></i></div>
+            <div class="calc-result-value" id="hav-dist">—</div>
+            <div class="calc-result-label">Distancia</div>
+          </div>
+          <div class="calc-result-card">
+            <div class="calc-result-icon"><i class="fas fa-compass"></i></div>
+            <div class="calc-result-value" id="hav-bearing">—</div>
+            <div class="calc-result-label">Rumbo</div>
+          </div>
+          <div class="calc-result-card">
+            <div class="calc-result-icon"><i class="fas fa-location-arrow"></i></div>
+            <div class="calc-result-value" id="hav-dir">—</div>
+            <div class="calc-result-label">Dirección</div>
+          </div>
+          <div class="calc-result-card">
+            <div class="calc-result-icon"><i class="fas fa-gauge-high"></i></div>
+            <div class="calc-result-value" id="hav-speed">—</div>
+            <div class="calc-result-label">Velocidad (Δt = 30s)</div>
+          </div>
+        </div>
+
+        <div class="compass-wrap">
+          <svg class="compass-svg" id="compass-svg" viewBox="-10 -10 220 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer ring -->
+            <circle cx="100" cy="100" r="96" fill="#0d1117" stroke="#30363d" stroke-width="1.5"/>
+            <!-- Inner decorative ring -->
+            <circle cx="100" cy="100" r="82" fill="none" stroke="#21262d" stroke-width="1"/>
+            <circle cx="100" cy="100" r="70" fill="#161b22" stroke="#21262d" stroke-width="0.5"/>
+
+            <!-- Cardinal tick marks (longer) -->
+            <line x1="100" y1="4"   x2="100" y2="22"  stroke="#f2c500" stroke-width="2.5"/>
+            <line x1="100" y1="178" x2="100" y2="196" stroke="#6b7280" stroke-width="2"/>
+            <line x1="4"   y1="100" x2="22"  y2="100" stroke="#6b7280" stroke-width="2"/>
+            <line x1="178" y1="100" x2="196" y2="100" stroke="#6b7280" stroke-width="2"/>
+
+            <!-- Intercardinal tick marks (NE, SE, SW, NO) -->
+            <line x1="168" y1="32"  x2="156" y2="44"  stroke="#374151" stroke-width="1.5"/>
+            <line x1="168" y1="168" x2="156" y2="156" stroke="#374151" stroke-width="1.5"/>
+            <line x1="32"  y1="168" x2="44"  y2="156" stroke="#374151" stroke-width="1.5"/>
+            <line x1="32"  y1="32"  x2="44"  y2="44"  stroke="#374151" stroke-width="1.5"/>
+
+            <!-- Minor tick marks every 30° -->
+            <line x1="150" y1="13"  x2="145" y2="22"  stroke="#1f2937" stroke-width="1"/>
+            <line x1="187" y1="50"  x2="178" y2="55"  stroke="#1f2937" stroke-width="1"/>
+            <line x1="187" y1="150" x2="178" y2="145" stroke="#1f2937" stroke-width="1"/>
+            <line x1="150" y1="187" x2="145" y2="178" stroke="#1f2937" stroke-width="1"/>
+            <line x1="50"  y1="187" x2="55"  y2="178" stroke="#1f2937" stroke-width="1"/>
+            <line x1="13"  y1="150" x2="22"  y2="145" stroke="#1f2937" stroke-width="1"/>
+            <line x1="13"  y1="50"  x2="22"  y2="55"  stroke="#1f2937" stroke-width="1"/>
+            <line x1="50"  y1="13"  x2="55"  y2="22"  stroke="#1f2937" stroke-width="1"/>
+
+            <!-- Cardinal labels -->
+            <text x="100" y="10"  text-anchor="middle" fill="#f2c500" font-size="14" font-family="monospace" font-weight="bold">N</text>
+            <text x="100" y="202" text-anchor="middle" fill="#6b7280" font-size="12" font-family="monospace">S</text>
+            <text x="202" y="104" text-anchor="start"  fill="#6b7280" font-size="12" font-family="monospace">E</text>
+            <text x="-2"  y="104" text-anchor="end"    fill="#6b7280" font-size="12" font-family="monospace">O</text>
+
+            <!-- Intercardinal labels -->
+            <text x="163" y="28"  text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">NE</text>
+            <text x="163" y="178" text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">SE</text>
+            <text x="37"  y="178" text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">SO</text>
+            <text x="37"  y="28"  text-anchor="middle" fill="#374151" font-size="9" font-family="monospace">NO</text>
+
+            <!-- Needle group, rotated via JS -->
+            <g id="compass-needle-group" transform="rotate(0,100,100)">
+              <!-- North needle (teal) -->
+              <polygon points="100,26 95,100 105,100" fill="#d62d61" opacity="0.95" filter="url(#compass-glow)"/>
+              <!-- South needle (red) -->
+              <polygon points="100,174 95,100 105,100" fill="#f85149" opacity="0.65"/>
+              <!-- Center cap -->
+              <circle cx="100" cy="100" r="7" fill="#21262d" stroke="#30363d" stroke-width="1.5"/>
+              <circle cx="100" cy="100" r="3" fill="#e6edf3"/>
+            </g>
+
+            <defs>
+              <filter id="compass-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+          </svg>
+          <div class="compass-caption" id="compass-caption">Introduce coordenadas para ver el rumbo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Schema ────────────────────────────────────────────────────────────── -->
+<section id="schema">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="schema.title">Esquema de Datos</h2>
+      <p data-i18n="schema.subtitle">Todas las tablas se crean automáticamente al arrancar el script. 8 tablas en total.</p>
+    </div>
+
+    <div class="schema-tabs fade-in">
+      <div class="tab-buttons">
+        <button class="tab-btn active">asturias/cadiz_vehicle_snapshots</button>
+        <button class="tab-btn">*_trip_updates</button>
+        <button class="tab-btn">*_service_alerts</button>
+        <button class="tab-btn">train_snapshots</button>
+        <button class="tab-btn">train_itineraries</button>
+        <button class="tab-btn">stations</button>
+      </div>
+      <!-- Panel 1: vehicle_snapshots -->
+      <div class="tab-panel active">
+        <table class="schema-table">
+          <thead><tr><th data-i18n="schema.col.column">Columna</th><th data-i18n="schema.col.type">Tipo</th><th data-i18n="schema.col.desc">Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="col-name">id</td><td class="col-type">INT IDENTITY</td><td class="col-desc">Clave primaria autoincremental</td></tr>
+            <tr><td class="col-name">captured_at</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Timestamp ISO 8601 UTC de la captura</td></tr>
+            <tr><td class="col-name">feed_timestamp</td><td class="col-type">BIGINT</td><td class="col-desc">Timestamp del header del feed GTFS-RT</td></tr>
+            <tr><td class="col-name">trip_id</td><td class="col-type">NVARCHAR(100)</td><td class="col-desc">ID del viaje, ej: "3015L23533C1"</td></tr>
+            <tr><td class="col-name">vehicle_id</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">ID del vehículo, ej: "23533"</td></tr>
+            <tr><td class="col-name">vehicle_label</td><td class="col-type">NVARCHAR(200)</td><td class="col-desc">Label completo, ej: "C1-23533-PLATF.(1)"</td></tr>
+            <tr><td class="col-name">line</td><td class="col-type">NVARCHAR(20)</td><td class="col-desc">Línea extraída del label, ej: "C1"</td></tr>
+            <tr><td class="col-name">latitude</td><td class="col-type">FLOAT</td><td class="col-desc">Latitud GPS</td></tr>
+            <tr><td class="col-name">longitude</td><td class="col-type">FLOAT</td><td class="col-desc">Longitud GPS</td></tr>
+            <tr><td class="col-name">bearing</td><td class="col-type">FLOAT</td><td class="col-desc">Rumbo calculado 0–360° (NULL si sin movimiento)</td></tr>
+            <tr><td class="col-name">speed</td><td class="col-type">FLOAT</td><td class="col-desc">Velocidad calculada en km/h (NULL si parado)</td></tr>
+            <tr><td class="col-name">current_status</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">INCOMING_AT · STOPPED_AT · IN_TRANSIT_TO</td></tr>
+            <tr><td class="col-name">stop_id</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Código de la parada actual</td></tr>
+            <tr><td class="col-name">event_timestamp</td><td class="col-type">BIGINT</td><td class="col-desc">Timestamp GPS del vehículo individual</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Panel 2: trip_updates -->
+      <div class="tab-panel">
+        <table class="schema-table">
+          <thead><tr><th data-i18n="schema.col.column">Columna</th><th data-i18n="schema.col.type">Tipo</th><th data-i18n="schema.col.desc">Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="col-name">id</td><td class="col-type">INT IDENTITY</td><td class="col-desc">Clave primaria</td></tr>
+            <tr><td class="col-name">captured_at</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Timestamp de captura</td></tr>
+            <tr><td class="col-name">feed_timestamp</td><td class="col-type">BIGINT</td><td class="col-desc">Timestamp del feed</td></tr>
+            <tr><td class="col-name">trip_id</td><td class="col-type">NVARCHAR(100)</td><td class="col-desc">ID del viaje</td></tr>
+            <tr><td class="col-name">line</td><td class="col-type">NVARCHAR(20)</td><td class="col-desc">Línea (C1, C2...)</td></tr>
+            <tr><td class="col-name">schedule_relationship</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Estado del viaje</td></tr>
+            <tr><td class="col-name">stop_sequence</td><td class="col-type">INT</td><td class="col-desc">Orden de la parada</td></tr>
+            <tr><td class="col-name">stop_id</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Código de la parada</td></tr>
+            <tr><td class="col-name">arrival_delay</td><td class="col-type">INT</td><td class="col-desc">Retraso de llegada en segundos</td></tr>
+            <tr><td class="col-name">departure_delay</td><td class="col-type">INT</td><td class="col-desc">Retraso de salida en segundos</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Panel 3: service_alerts -->
+      <div class="tab-panel">
+        <table class="schema-table">
+          <thead><tr><th data-i18n="schema.col.column">Columna</th><th data-i18n="schema.col.type">Tipo</th><th data-i18n="schema.col.desc">Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="col-name">id</td><td class="col-type">INT IDENTITY</td><td class="col-desc">Clave primaria</td></tr>
+            <tr><td class="col-name">captured_at</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Timestamp de captura</td></tr>
+            <tr><td class="col-name">feed_timestamp</td><td class="col-type">BIGINT</td><td class="col-desc">Timestamp del feed</td></tr>
+            <tr><td class="col-name">alert_id</td><td class="col-type">NVARCHAR(100)</td><td class="col-desc">ID de la alerta</td></tr>
+            <tr><td class="col-name">cause</td><td class="col-type">NVARCHAR(100)</td><td class="col-desc">Causa: TECHNICAL_PROBLEM, STRIKE, etc.</td></tr>
+            <tr><td class="col-name">effect</td><td class="col-type">NVARCHAR(100)</td><td class="col-desc">Efecto: REDUCED_SERVICE, NO_SERVICE, etc.</td></tr>
+            <tr><td class="col-name">header_text</td><td class="col-type">NVARCHAR(MAX)</td><td class="col-desc">Título de la alerta</td></tr>
+            <tr><td class="col-name">description</td><td class="col-type">NVARCHAR(MAX)</td><td class="col-desc">Descripción completa</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Panel 4: train_snapshots -->
+      <div class="tab-panel">
+        <table class="schema-table">
+          <thead><tr><th data-i18n="schema.col.column">Columna</th><th data-i18n="schema.col.type">Tipo</th><th data-i18n="schema.col.desc">Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="col-name">id</td><td class="col-type">INT IDENTITY</td><td class="col-desc">Clave primaria</td></tr>
+            <tr><td class="col-name">captured_at</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Timestamp ISO 8601 UTC</td></tr>
+            <tr><td class="col-name">cod_comercial</td><td class="col-type">NVARCHAR(20)</td><td class="col-desc">Número de tren, ej: "01601"</td></tr>
+            <tr><td class="col-name">tipo_tren</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">AVE · Alvia · Avant · Intercity</td></tr>
+            <tr><td class="col-name">des_corridor</td><td class="col-type">NVARCHAR(200)</td><td class="col-desc">Corredor, ej: "Madrid PA - Cádiz"</td></tr>
+            <tr><td class="col-name">latitude</td><td class="col-type">FLOAT</td><td class="col-desc">Latitud GPS actual</td></tr>
+            <tr><td class="col-name">longitude</td><td class="col-type">FLOAT</td><td class="col-desc">Longitud GPS actual</td></tr>
+            <tr><td class="col-name">speed</td><td class="col-type">FLOAT</td><td class="col-desc">Velocidad calculada en km/h</td></tr>
+            <tr><td class="col-name">bearing</td><td class="col-type">FLOAT</td><td class="col-desc">Rumbo calculado 0–360°</td></tr>
+            <tr><td class="col-name">ult_retraso</td><td class="col-type">INT</td><td class="col-desc">Retraso actual en minutos</td></tr>
+            <tr><td class="col-name">cod_est_sig</td><td class="col-type">NVARCHAR(20)</td><td class="col-desc">Código siguiente estación</td></tr>
+            <tr><td class="col-name">hora_llegada_sig_est</td><td class="col-type">NVARCHAR(10)</td><td class="col-desc">Hora estimada llegada a siguiente estación</td></tr>
+            <tr><td class="col-name">material</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Código de composición del tren</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Panel 5: train_itineraries -->
+      <div class="tab-panel">
+        <table class="schema-table">
+          <thead><tr><th data-i18n="schema.col.column">Columna</th><th data-i18n="schema.col.type">Tipo</th><th data-i18n="schema.col.desc">Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="col-name">id</td><td class="col-type">INT IDENTITY</td><td class="col-desc">Clave primaria</td></tr>
+            <tr><td class="col-name">captured_at</td><td class="col-type">NVARCHAR(50)</td><td class="col-desc">Timestamp de captura</td></tr>
+            <tr><td class="col-name">cod_comercial</td><td class="col-type">NVARCHAR(20)</td><td class="col-desc">Número de tren</td></tr>
+            <tr><td class="col-name">stop_order</td><td class="col-type">INT</td><td class="col-desc">Orden de la parada (0-based)</td></tr>
+            <tr><td class="col-name">station_code</td><td class="col-type">NVARCHAR(20)</td><td class="col-desc">Código de la estación</td></tr>
+            <tr><td class="col-name">hora_prog</td><td class="col-type">NVARCHAR(10)</td><td class="col-desc">Hora programada "HH:MM"</td></tr>
+            <tr><td class="col-name">latitude</td><td class="col-type">FLOAT</td><td class="col-desc">Latitud GPS de la parada</td></tr>
+            <tr><td class="col-name">longitude</td><td class="col-type">FLOAT</td><td class="col-desc">Longitud GPS de la parada</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Panel 6: stations -->
+      <div class="tab-panel">
+        <table class="schema-table">
+          <thead><tr><th data-i18n="schema.col.column">Columna</th><th data-i18n="schema.col.type">Tipo</th><th data-i18n="schema.col.desc">Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="col-name">codigo</td><td class="col-type">INT</td><td class="col-desc">Código único de la estación (PK)</td></tr>
+            <tr><td class="col-name">nombre</td><td class="col-type">NVARCHAR(200)</td><td class="col-desc">Nombre de la estación</td></tr>
+            <tr><td class="col-name">latitude</td><td class="col-type">FLOAT</td><td class="col-desc">Latitud</td></tr>
+            <tr><td class="col-name">longitude</td><td class="col-type">FLOAT</td><td class="col-desc">Longitud</td></tr>
+            <tr><td class="col-name">localidad</td><td class="col-type">NVARCHAR(200)</td><td class="col-desc">Localidad</td></tr>
+            <tr><td class="col-name">provincia</td><td class="col-type">NVARCHAR(100)</td><td class="col-desc">Provincia</td></tr>
+            <tr><td class="col-name">es_cercanias</td><td class="col-type">INT</td><td class="col-desc">1 si tiene servicio de cercanías</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Setup ─────────────────────────────────────────────────────────────── -->
+<section id="setup">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="setup.title">Puesta en Marcha</h2>
+      <p data-i18n="setup.subtitle">Desde cero hasta capturando datos en producción en 9 pasos</p>
+    </div>
+
+    <div class="setup-prereq fade-in">
+      <h3 data-i18n="setup.prereq">Prerrequisitos</h3>
+      <ul>
+        <li data-i18n="setup.prereq.vm">VM Azure B1s con Ubuntu 22.04</li>
+        <li data-i18n="setup.prereq.sql">Azure SQL Database creada y accesible desde la VM</li>
+        <li data-i18n="setup.prereq.key">Clave SSH <code>deploy/tu-clave.pem</code> disponible localmente</li>
+      </ul>
+    </div>
+
+    <div class="steps-list">
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">1</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step1.title">Configurar credenciales</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash (.env)</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-bash">DB_SERVER=tu-servidor.database.windows.net
+DB_NAME=tu_base_de_datos
+DB_USER=tu_usuario
+DB_PASSWORD=tu_password_seguro</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">2</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step2.title">Permisos SSH (Windows)</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">powershell</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-powershell">icacls "deploy\tu-clave.pem" /inheritance:r
+icacls "deploy\tu-clave.pem" /grant:r "${env:USERNAME}:(R)"</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">3</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step3.title">Subir archivos a la VM</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-bash">scp -i deploy/tu-clave.pem \
+    renfe_capture.py azure_db.py .env deploy/setup.sh \
+    tu_usuario@&lt;IP_DE_TU_VM&gt;:/home/tu_usuario/</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">4</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step4.title">Conectar por SSH</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-bash">ssh -i deploy/tu-clave.pem tu_usuario@&lt;IP_DE_TU_VM&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">5</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step5.title">Ejecutar setup.sh</h3>
+          <p data-i18n="setup.step5.desc">Instala Python, ODBC Driver 18, dependencias y crea el servicio systemd.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-bash">sed -i 's/\r//' ~/setup.sh   # Necesario si subido desde Windows
+chmod +x ~/setup.sh && sudo bash ~/setup.sh</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">6</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step6.title">Copiar .env a /opt/renfe/</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-bash">sudo cp /home/tu_usuario/.env /opt/renfe/.env
+sudo chmod 644 /opt/renfe/.env   # 644, NO 600</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">7</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step7.title">Cargar catálogo de estaciones</h3>
+          <p data-i18n="setup.step7.desc">Solo necesario la primera vez para largo recorrido.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-bash">python3 /opt/renfe/renfe_capture.py --init-stations</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">8</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step8.title">Verificar el servicio</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-bash">sudo systemctl status renfe-capture
+# Active: active (running) ✓
+# └─ /usr/bin/python3 /opt/renfe/renfe_capture.py --loop 30 --flush-every 480</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step fade-in">
+        <div class="setup-step-num">9</div>
+        <div class="setup-step-content">
+          <h3 data-i18n="setup.step9.title">Ver logs en tiempo real</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+            <pre><code class="language-bash">tail -f /opt/renfe/renfe-capture.log
+# 2026-03-17 09:00:15 INFO CAPTURA | AST 26pos/1upd  CDZ 5pos/4upd  LR 145snap/0itin  0.8s
+# 2026-03-17 09:00:45 INFO CAPTURA | AST 24pos/0upd  CDZ 4pos/3upd  LR 143snap/0itin  0.7s
+# ...
+# 2026-03-17 13:00:15 INFO FLUSH   | AST: 1820pos/70upd | CDZ: 350pos/280upd | LR: 10150snap/0itin | total 12670 filas</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Query ──────────────────────────────────────────────────────────────── -->
+<section id="query">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="query.title">Consultar los Datos</h2>
+      <p data-i18n="query.subtitle">Los datos son accesibles desde cualquier cliente SQL o directamente con Python/pandas</p>
+    </div>
+
+    <h3 style="margin-bottom:12px;font-size:1rem" data-i18n="query.clients.title">Clientes compatibles</h3>
+    <div class="clients-list fade-in">
+      <span class="client-chip">SSMS</span>
+      <span class="client-chip">Azure Data Studio</span>
+      <span class="client-chip">DBeaver</span>
+      <span class="client-chip">pandas</span>
+      <span class="client-chip">Jupyter Notebook</span>
+      <span class="client-chip">Power BI</span>
+    </div>
+    <p class="client-note fade-in" data-i18n="query.clients.note">Añade tu IP local al firewall de Azure SQL: Portal → SQL Server → Networking → Firewall rules</p>
+
+    <div class="query-tabs">
+      <div class="fade-in">
+        <h3 style="margin-bottom:16px;font-size:1rem" data-i18n="query.sql.title">Consultas T-SQL de ejemplo</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">sql</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+          <pre><code class="language-sql">-- Últimas posiciones de Asturias
+SELECT TOP 100 *
+FROM asturias_vehicle_snapshots
+ORDER BY captured_at DESC;
+
+-- Velocidad media por línea en Cádiz
+SELECT line,
+       ROUND(AVG(speed), 1) AS avg_speed_kmh,
+       ROUND(MAX(speed), 1) AS max_speed_kmh,
+       COUNT(*) AS registros
+FROM cadiz_vehicle_snapshots
+WHERE speed IS NOT NULL AND line IS NOT NULL
+GROUP BY line
+ORDER BY avg_speed_kmh DESC;
+
+-- Retrasos últimas 24h en Asturias
+SELECT line,
+  ROUND(AVG(CAST(arrival_delay AS FLOAT))/60.0,1) AS avg_delay_min,
+  MAX(arrival_delay)/60 AS max_delay_min
+FROM asturias_trip_updates
+WHERE captured_at >= CONVERT(NVARCHAR,
+      DATEADD(hour,-24,GETUTCDATE()),126)
+GROUP BY line;
+
+-- Trenes LD en ruta ahora mismo
+SELECT cod_comercial, tipo_tren, des_corridor,
+       speed, ult_retraso, hora_llegada_sig_est
+FROM train_snapshots
+WHERE captured_at = (SELECT MAX(captured_at) FROM train_snapshots)
+ORDER BY ult_retraso DESC;</code></pre>
+        </div>
+      </div>
+
+      <div class="fade-in">
+        <h3 style="margin-bottom:16px;font-size:1rem" data-i18n="query.python.title">Python / pandas</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
+          <pre><code class="language-python">import pyodbc
+import pandas as pd
+from dotenv import load_dotenv
+import os
+
+load_dotenv(".env")
+
+conn_str = (
+    "DRIVER={ODBC Driver 18 for SQL Server};"
+    f"SERVER={os.environ['DB_SERVER']},1433;"
+    f"DATABASE={os.environ['DB_NAME']};"
+    f"UID={os.environ['DB_USER']};"
+    f"PWD={os.environ['DB_PASSWORD']};"
+    "Encrypt=yes;TrustServerCertificate=no;"
+)
+conn = pyodbc.connect(conn_str)
+
+# Cargar datos con velocidad calculada
+df_ast = pd.read_sql(
+    "SELECT * FROM asturias_vehicle_snapshots WHERE speed IS NOT NULL",
+    conn
+)
+df_cdz = pd.read_sql(
+    "SELECT * FROM cadiz_vehicle_snapshots WHERE speed IS NOT NULL",
+    conn
+)
+df_lr = pd.read_sql("SELECT * FROM train_snapshots", conn)
+
+conn.close()
+
+# Análisis rápido
+print(df_ast.groupby("line")["speed"].describe())</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Analysis ───────────────────────────────────────────────────────────── -->
+<section id="analysis">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="analysis.title">Análisis y Machine Learning</h2>
+      <p data-i18n="analysis.subtitle">Dataset ideal para análisis de transporte público, predicción de retrasos y modelos de ML</p>
+    </div>
+
+    <div class="analysis-table-wrapper fade-in">
+      <table class="analysis-table">
+        <thead>
+          <tr>
+            <th data-i18n="analysis.col.analysis">Análisis</th>
+            <th data-i18n="analysis.col.data">Datos necesarios</th>
+            <th data-i18n="analysis.col.tables">Tablas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="icon"><i class="fas fa-stopwatch"></i></span><span data-i18n="analysis.delay.name">Predicción de retrasos</span></td>
+            <td><code class="table-tag" data-i18n="analysis.delay.data">arrival_delay + hora + día + línea</code></td>
+            <td><code class="table-tag">*_trip_updates</code></td>
+          </tr>
+          <tr>
+            <td><span class="icon"><i class="fas fa-rocket"></i></span><span data-i18n="analysis.speed.name">Velocidad media por tramo</span></td>
+            <td><code class="table-tag" data-i18n="analysis.speed.data">speed + stop_id consecutivos</code></td>
+            <td><code class="table-tag">*_vehicle_snapshots</code></td>
+          </tr>
+          <tr>
+            <td><span class="icon"><i class="fas fa-calendar-days"></i></span><span data-i18n="analysis.punctuality.name">Puntualidad histórica</span></td>
+            <td><code class="table-tag" data-i18n="analysis.punctuality.data">arrival_delay + fecha agrupado</code></td>
+            <td><code class="table-tag">*_trip_updates</code></td>
+          </tr>
+          <tr>
+            <td><span class="icon"><i class="fas fa-bullseye"></i></span><span data-i18n="analysis.eta.name">Predicción ETA largo recorrido</span></td>
+            <td><code class="table-tag" data-i18n="analysis.eta.data">ult_retraso + hora_llegada_sig_est</code></td>
+            <td><code class="table-tag">train_snapshots</code></td>
+          </tr>
+          <tr>
+            <td><span class="icon"><i class="fas fa-triangle-exclamation"></i></span><span data-i18n="analysis.anomaly.name">Anomalías de velocidad</span></td>
+            <td><code class="table-tag" data-i18n="analysis.anomaly.data">speed fuera de rango por tramo</code></td>
+            <td><code class="table-tag">ambas</code></td>
+          </tr>
+          <tr>
+            <td><span class="icon"><i class="fas fa-clock"></i></span><span data-i18n="analysis.pattern.name">Patrones por hora del día</span></td>
+            <td><code class="table-tag" data-i18n="analysis.pattern.data">arrival_delay + hora captured_at</code></td>
+            <td><code class="table-tag">*_trip_updates</code></td>
+          </tr>
+          <tr>
+            <td><span class="icon"><i class="fas fa-map"></i></span><span data-i18n="analysis.route.name">Reconstrucción de trayectos</span></td>
+            <td><code class="table-tag" data-i18n="analysis.route.data">lat, lon, bearing ordenados por tiempo</code></td>
+            <td><code class="table-tag">*_vehicle_snapshots</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- WIP banner -->
+    <div class="wip-banner fade-in">
+      <div class="wip-tracks">
+        <div class="wip-rail wip-rail-top"></div>
+        <div class="wip-sleepers">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="wip-rail wip-rail-bottom"></div>
+        <div class="wip-locomotive">
+          <i class="fas fa-train"></i>
+        </div>
+      </div>
+      <div class="wip-content">
+        <div class="wip-badge">
+          <i class="fas fa-helmet-safety"></i> ANDÉN EN OBRAS
+        </div>
+        <h3 class="wip-title">Próxima parada: <span>Análisis ML</span></h3>
+        <p class="wip-desc">
+          El tren de los datos está en ruta. Los análisis, visualizaciones y modelos de Machine Learning
+          están en desarrollo activo. Las ideas de la tabla de arriba son el itinerario previsto.
+        </p>
+        <div class="wip-status">
+          <div class="wip-status-dot"></div>
+          <span>Recopilando datos · Llegada sin confirmar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h3><i class="fas fa-train"></i> RenfeScraper</h3>
+        <p data-i18n="footer.built">Construido con Python, Azure y mucho café</p>
+        <p style="margin-top:8px"><span data-i18n="footer.license">Datos Renfe bajo licencia CC BY 4.0</span> · <span data-i18n="footer.academic">Proyecto académico</span></p>
+      </div>
+      <div class="footer-links">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/David01mc/ScrapingWebRenfe" target="_blank">GitHub Repository</a></li>
+          <li><a href="https://github.com/David01mc/ScrapingWebRenfe/archive/refs/heads/main.zip">Descargar ZIP</a></li>
+          <li><a href="https://data.renfe.com/dataset" target="_blank">Portal Datos Renfe</a></li>
+          <li><a href="https://gtfsrt.renfe.com/vehicle_positions.json" target="_blank">API GTFS-RT Live</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Tech Stack</h4>
+        <ul>
+          <li><a href="https://azure.microsoft.com/products/azure-sql-database" target="_blank">Azure SQL Database</a></li>
+          <li><a href="https://pypi.org/project/pyodbc/" target="_blank">pyodbc</a></li>
+          <li><a href="https://pypi.org/project/requests/" target="_blank">requests</a></li>
+          <li><a href="https://systemd.io" target="_blank">systemd</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 RenfeScraper · MIT License</p>
+      <div class="footer-tech">
+        <span class="tech-pill">Python 3.x</span>
+        <span class="tech-pill">Azure SQL</span>
+        <span class="tech-pill">Ubuntu 22.04</span>
+        <span class="tech-pill">GTFS-RT</span>
+        <span class="tech-pill">Mermaid.js</span>
+        <span class="tech-pill"><i class="fab fa-github"></i> GitHub Pages</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Scripts ────────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
