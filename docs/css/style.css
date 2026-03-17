@@ -731,6 +731,7 @@ a.gloss-link:hover {
 
 @media (max-width: 640px) {
   .gloss-grid { grid-template-columns: 1fr; }
+  .gloss-entry { padding: 14px 16px; }
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
@@ -845,14 +846,21 @@ code[class*="language-"], pre[class*="language-"] {
   .tab-btn { padding: 6px 10px; font-size: 0.75rem; }
   /* Section title */
   .section-title { font-size: 1.4rem; }
-  /* Code blocks */
-  .code-block pre { font-size: 0.75rem; padding: 16px 12px; }
+  /* Code blocks — horizontal scroll, no wrap */
+  .code-block { overflow-x: auto; }
+  .code-block pre { font-size: 0.75rem; padding: 16px 12px; overflow-x: auto; }
   /* Stats */
   .stat-number { font-size: 2rem; }
-  /* Opt table scrollable */
-  .opt-table-wrapper { overflow-x: auto; }
+  /* All tables scrollable */
+  .opt-table-wrapper,
+  .flow-table,
+  .schema-table,
+  .analysis-table,
+  .flow-detail { overflow-x: auto; display: block; }
   /* Footer */
   .footer-bottom { gap: 8px; }
+  /* Arch SVG — reduce min-width for very small screens */
+  .arch-svg { min-width: 360px; }
 }
 
 /* ── Haversine Calculator ─────────────────────────────────────────────────── */
