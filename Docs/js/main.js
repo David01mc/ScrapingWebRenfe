@@ -40,6 +40,19 @@ const counterObserver = new IntersectionObserver((entries) => {
 // ── vCore Chart ─────────────────────────────────────────────────────────────
 let vCoreChart = null;
 
+function chartTheme() {
+  const day = document.body.classList.contains('day-mode');
+  return {
+    grid:        day ? '#d0d7de' : '#30363d',
+    tick:        day ? '#4a5568' : '#8b949e',
+    limitLine:   day ? '#b07d00' : '#f2c500',
+    tooltipBg:   day ? '#ffffff' : '#21262d',
+    tooltipBorder: day ? '#d0d7de' : '#30363d',
+    tooltipTitle: day ? '#1f2328' : '#e6edf3',
+    tooltipBody:  day ? '#4a5568' : '#8b949e',
+  };
+}
+
 function buildVCoreChart() {
   const canvas = document.getElementById('vcoreChart');
   if (!canvas || typeof Chart === 'undefined') return;
@@ -52,31 +65,31 @@ function buildVCoreChart() {
     'rgba(255, 165, 0, 0.85)',
     'rgba(214, 45, 97, 0.85)',
   ];
-  const borderColors = [
-    '#f85149', '#ffc432', '#ffa500', '#d62d61'
-  ];
+  const borderColors = ['#f85149', '#ffc432', '#ffa500', '#d62d61'];
 
   const limitPlugin = {
     id: 'limitLine',
     afterDraw(chart) {
+      const t = chartTheme();
       const { ctx, chartArea, scales } = chart;
       const y = scales.y.getPixelForValue(100000);
       ctx.save();
       ctx.beginPath();
       ctx.setLineDash([8, 4]);
-      ctx.strokeStyle = '#f2c500';
+      ctx.strokeStyle = t.limitLine;
       ctx.lineWidth = 2;
       ctx.moveTo(chartArea.left, y);
       ctx.lineTo(chartArea.right, y);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = '#f2c500';
+      ctx.fillStyle = t.limitLine;
       ctx.font = '12px monospace';
       ctx.fillText('Límite gratuito: 100.000', chartArea.left + 8, y - 8);
       ctx.restore();
     }
   };
 
+  const t = chartTheme();
   vCoreChart = new Chart(canvas, {
     type: 'bar',
     data: {
@@ -96,27 +109,27 @@ function buildVCoreChart() {
       animation: { duration: 1200, easing: 'easeOutQuart' },
       scales: {
         x: {
-          ticks: { color: '#8b949e', font: { family: 'monospace', size: 12 } },
-          grid: { color: '#30363d' },
+          ticks: { color: t.tick, font: { family: 'monospace', size: 12 } },
+          grid: { color: t.grid },
         },
         y: {
           type: 'logarithmic',
           ticks: {
-            color: '#8b949e',
+            color: t.tick,
             font: { family: 'monospace', size: 11 },
             callback: (v) => v >= 1000 ? (v / 1000).toLocaleString('es-ES') + 'k' : v,
           },
-          grid: { color: '#30363d' },
+          grid: { color: t.grid },
         }
       },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#21262d',
-          borderColor: '#30363d',
+          backgroundColor: t.tooltipBg,
+          borderColor: t.tooltipBorder,
           borderWidth: 1,
-          titleColor: '#e6edf3',
-          bodyColor: '#8b949e',
+          titleColor: t.tooltipTitle,
+          bodyColor: t.tooltipBody,
           callbacks: {
             label: (ctx) => ' ' + ctx.raw.toLocaleString('es-ES') + ' vCore-s/mes',
           }
@@ -125,6 +138,20 @@ function buildVCoreChart() {
     },
     plugins: [limitPlugin]
   });
+}
+
+function updateChartTheme() {
+  if (!vCoreChart) return;
+  const t = chartTheme();
+  vCoreChart.options.scales.x.ticks.color       = t.tick;
+  vCoreChart.options.scales.x.grid.color        = t.grid;
+  vCoreChart.options.scales.y.ticks.color       = t.tick;
+  vCoreChart.options.scales.y.grid.color        = t.grid;
+  vCoreChart.options.plugins.tooltip.backgroundColor = t.tooltipBg;
+  vCoreChart.options.plugins.tooltip.borderColor     = t.tooltipBorder;
+  vCoreChart.options.plugins.tooltip.titleColor      = t.tooltipTitle;
+  vCoreChart.options.plugins.tooltip.bodyColor       = t.tooltipBody;
+  vCoreChart.update('none');
 }
 
 // Trigger chart only when visible
@@ -364,9 +391,32 @@ function initHaversineCalc() {
   update(); // initial calc
 }
 
+// ── Theme toggle (day / night) ───────────────────────────────────────────────
+function initThemeToggle() {
+  const btn  = document.getElementById('theme-toggle');
+  const icon = document.getElementById('theme-icon');
+  if (!btn) return;
+
+  // Default = dark/night. 'day-mode' class activates the light theme.
+  const apply = (day) => {
+    document.body.classList.toggle('day-mode', day);
+    icon.className = day ? 'fas fa-moon' : 'fas fa-sun';
+  };
+
+  apply(localStorage.getItem('theme') === 'day');
+
+  btn.addEventListener('click', () => {
+    const isDay = document.body.classList.toggle('day-mode');
+    icon.className = isDay ? 'fas fa-moon' : 'fas fa-sun';
+    localStorage.setItem('theme', isDay ? 'day' : 'night');
+    updateChartTheme();
+  });
+}
+
 // ── Boot ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initMermaid();
+  initThemeToggle();
   initNavbar();
   initParticles();
   initSchemaTabs();

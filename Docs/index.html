@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Renfe Real-Time Scraper — Sistema de Captura de Trenes</title>
+  <title>Renfe Real-Time Scraper — Sistema de captura de trenes</title>
   <meta name="description" content="Sistema autónomo de scraping en tiempo real para datos de trenes Renfe. Captura posiciones GPS, retrasos y alertas. Almacena en Azure SQL Database." />
   <meta property="og:title" content="Renfe Real-Time Train Scraper" />
   <meta property="og:description" content="Open source real-time train data capture system for Renfe (Spain). GPS positions, delays, alerts. Azure SQL + Python." />
@@ -35,9 +35,13 @@
       <li><a href="#optimization" class="nav-link" data-i18n="nav.optimization">Optimización</a></li>
       <li><a href="#setup"        class="nav-link" data-i18n="nav.setup">Instalación</a></li>
       <li><a href="#analysis"     class="nav-link" data-i18n="nav.analysis">Análisis</a></li>
+      <li><a href="#glossary"     class="nav-link">Glosario</a></li>
     </ul>
 
     <div class="nav-right">
+      <button id="theme-toggle" aria-label="Cambiar modo día/noche" title="Modo día/noche">
+        <i class="fas fa-moon" id="theme-icon"></i>
+      </button>
       <div class="lang-toggle">
         <button class="lang-btn" data-lang="es">🇪🇸 ES</button>
         <button class="lang-btn" data-lang="en">🇬🇧 EN</button>
@@ -83,6 +87,630 @@
   <div class="scroll-hint">
     <span>scroll</span>
     <i class="fas fa-arrow-down"></i>
+  </div>
+  <div class="train-scene train-day">
+  <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <style>
+        @keyframes ts-c { to { transform: translateX(-900px); } }
+        @keyframes ts-m { to { transform: translateX(-900px); } }
+        @keyframes ts-h { to { transform: translateX(-900px); } }
+        @keyframes ts-t { to { transform: translateX(-900px); } }
+        @keyframes ts-r { to { transform: translateX(-900px); } }
+        @keyframes ts-g { to { transform: translateX(-900px); } }
+        @keyframes ts-i { to { transform: translateX(-900px); } }
+        .tsc { animation: ts-c 30s  linear infinite; }
+        .tsm { animation: ts-m 22s  linear infinite; }
+        .tsh { animation: ts-h 14s  linear infinite; }
+        .tst { animation: ts-t  9s  linear infinite; }
+        .tsr { animation: ts-r 11s  linear infinite; }
+        .tsg { animation: ts-g  6s  linear infinite; }
+        .tsi { animation: ts-i 2.4s linear infinite; }
+      </style>
+      <linearGradient id="ts-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#5aadcc"/>
+        <stop offset="55%"  stop-color="#8dcce0"/>
+        <stop offset="100%" stop-color="#b8e2ef"/>
+      </linearGradient>
+      <linearGradient id="ts-water" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#4bbdd4"/>
+        <stop offset="100%" stop-color="#35a8bf"/>
+      </linearGradient>
+      <linearGradient id="ts-tbody" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#dedad5"/>
+        <stop offset="100%" stop-color="#f0eee9"/>
+      </linearGradient>
+      <linearGradient id="ts-lbody" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="#c8c5c0"/>
+        <stop offset="100%" stop-color="#f0eee9"/>
+      </linearGradient>
+    </defs>
+
+    <!-- SKY -->
+    <rect width="900" height="340" fill="url(#ts-sky)"/>
+
+    <!-- CLOUDS -->
+    <g class="tsc">
+      <g opacity="0.93"><ellipse cx="140" cy="50" rx="62" ry="21" fill="white"/><ellipse cx="106" cy="57" rx="36" ry="16" fill="white"/><ellipse cx="178" cy="57" rx="40" ry="15" fill="white"/></g>
+      <g opacity="0.82"><ellipse cx="390" cy="36" rx="70" ry="23" fill="white"/><ellipse cx="350" cy="44" rx="40" ry="17" fill="white"/><ellipse cx="432" cy="44" rx="46" ry="16" fill="white"/></g>
+      <g opacity="0.75"><ellipse cx="650" cy="58" rx="50" ry="17" fill="white"/><ellipse cx="616" cy="65" rx="30" ry="13" fill="white"/><ellipse cx="685" cy="65" rx="34" ry="13" fill="white"/></g>
+      <g opacity="0.88"><ellipse cx="840" cy="42" rx="55" ry="20" fill="white"/><ellipse cx="803" cy="49" rx="34" ry="15" fill="white"/><ellipse cx="877" cy="49" rx="38" ry="15" fill="white"/></g>
+      <!-- duplicates -->
+      <g opacity="0.93"><ellipse cx="1040" cy="50" rx="62" ry="21" fill="white"/><ellipse cx="1006" cy="57" rx="36" ry="16" fill="white"/><ellipse cx="1078" cy="57" rx="40" ry="15" fill="white"/></g>
+      <g opacity="0.82"><ellipse cx="1290" cy="36" rx="70" ry="23" fill="white"/><ellipse cx="1250" cy="44" rx="40" ry="17" fill="white"/><ellipse cx="1332" cy="44" rx="46" ry="16" fill="white"/></g>
+      <g opacity="0.75"><ellipse cx="1550" cy="58" rx="50" ry="17" fill="white"/><ellipse cx="1516" cy="65" rx="30" ry="13" fill="white"/><ellipse cx="1585" cy="65" rx="34" ry="13" fill="white"/></g>
+      <g opacity="0.88"><ellipse cx="1740" cy="42" rx="55" ry="20" fill="white"/><ellipse cx="1703" cy="49" rx="34" ry="15" fill="white"/><ellipse cx="1777" cy="49" rx="38" ry="15" fill="white"/></g>
+    </g>
+
+    <!-- FAR MOUNTAINS -->
+    <g class="tsm">
+      <polygon points="  0,222  85,80 170,222" fill="#8cafc2"/><polygon points=" 70,222 175,62 280,222" fill="#7aa0b4"/>
+      <polygon points="190,222 305,88 420,222" fill="#8cafc2"/><polygon points="330,222 440,68 550,222" fill="#7aa0b4"/>
+      <polygon points="460,222 575,84 690,222" fill="#8cafc2"/><polygon points="610,222 718,66 826,222" fill="#7aa0b4"/>
+      <polygon points="730,222 848,82 966,222" fill="#8cafc2"/>
+      <polygon points=" 900,222  985,80 1070,222" fill="#8cafc2"/><polygon points=" 970,222 1075,62 1180,222" fill="#7aa0b4"/>
+      <polygon points="1090,222 1205,88 1320,222" fill="#8cafc2"/><polygon points="1230,222 1340,68 1450,222" fill="#7aa0b4"/>
+      <polygon points="1360,222 1475,84 1590,222" fill="#8cafc2"/><polygon points="1510,222 1618,66 1726,222" fill="#7aa0b4"/>
+      <polygon points="1630,222 1748,82 1866,222" fill="#8cafc2"/>
+    </g>
+
+    <!-- NEAR HILLS -->
+    <g class="tsh">
+      <path d="M0,272 Q110,210 220,248 Q340,278 460,218 Q560,182 660,228 Q760,262 900,216 L900,340 L0,340 Z" fill="#3a7a3a"/>
+      <path d="M900,272 Q1010,210 1120,248 Q1240,278 1360,218 Q1460,182 1560,228 Q1660,262 1800,216 L1800,340 L900,340 Z" fill="#3a7a3a"/>
+    </g>
+
+    <!-- PINE TREES -->
+    <g class="tst">
+      <g transform="translate(45,0)"><polygon points="0,248 17,194 34,248" fill="#28622e"/><polygon points="2,234 17,180 32,234" fill="#317538"/><polygon points="5,220 17,168 29,220" fill="#3a8842"/><rect x="14" y="248" width="6" height="14" fill="#5c3820"/></g>
+      <g transform="translate(118,8)"><polygon points="0,240 20,177 40,240" fill="#28622e"/><polygon points="2,226 20,163 38,226" fill="#317538"/><polygon points="5,212 20,152 35,212" fill="#3a8842"/><rect x="16" y="240" width="8" height="16" fill="#5c3820"/></g>
+      <g transform="translate(200,3)"><polygon points="0,244 16,190 32,244" fill="#28622e"/><polygon points="2,230 16,176 30,230" fill="#317538"/><polygon points="4,216 16,164 28,216" fill="#3a8842"/><rect x="13" y="244" width="6" height="13" fill="#5c3820"/></g>
+      <g transform="translate(278,0)"><polygon points="0,246 22,180 44,246" fill="#28622e"/><polygon points="3,232 22,165 41,232" fill="#317538"/><polygon points="6,217 22,154 38,217" fill="#3a8842"/><rect x="18" y="246" width="8" height="14" fill="#5c3820"/></g>
+      <g transform="translate(368,6)"><polygon points="0,241 17,186 34,241" fill="#28622e"/><polygon points="2,227 17,172 32,227" fill="#317538"/><polygon points="4,213 17,160 30,213" fill="#3a8842"/><rect x="14" y="241" width="6" height="14" fill="#5c3820"/></g>
+      <g transform="translate(448,1)"><polygon points="0,245 20,182 40,245" fill="#28622e"/><polygon points="2,231 20,167 38,231" fill="#317538"/><polygon points="5,217 20,156 35,217" fill="#3a8842"/><rect x="16" y="245" width="8" height="14" fill="#5c3820"/></g>
+      <g transform="translate(534,5)"><polygon points="0,242 16,188 32,242" fill="#28622e"/><polygon points="2,228 16,174 30,228" fill="#317538"/><polygon points="4,214 16,162 28,214" fill="#3a8842"/><rect x="13" y="242" width="6" height="13" fill="#5c3820"/></g>
+      <g transform="translate(614,0)"><polygon points="0,247 22,181 44,247" fill="#28622e"/><polygon points="3,233 22,166 41,233" fill="#317538"/><polygon points="6,218 22,154 38,218" fill="#3a8842"/><rect x="18" y="247" width="8" height="13" fill="#5c3820"/></g>
+      <g transform="translate(706,4)"><polygon points="0,243 18,184 36,243" fill="#28622e"/><polygon points="2,229 18,170 34,229" fill="#317538"/><polygon points="5,215 18,158 31,215" fill="#3a8842"/><rect x="15" y="243" width="6" height="14" fill="#5c3820"/></g>
+      <g transform="translate(792,2)"><polygon points="0,245 19,186 38,245" fill="#28622e"/><polygon points="2,231 19,172 36,231" fill="#317538"/><polygon points="5,217 19,160 33,217" fill="#3a8842"/><rect x="15" y="245" width="7" height="14" fill="#5c3820"/></g>
+      <g transform="translate(868,7)"><polygon points="0,240 16,186 32,240" fill="#28622e"/><polygon points="2,226 16,172 30,226" fill="#317538"/><polygon points="4,212 16,160 28,212" fill="#3a8842"/><rect x="13" y="240" width="6" height="13" fill="#5c3820"/></g>
+      <!-- duplicates offset +900 -->
+      <g transform="translate(945,0)"><polygon points="0,248 17,194 34,248" fill="#28622e"/><polygon points="2,234 17,180 32,234" fill="#317538"/><polygon points="5,220 17,168 29,220" fill="#3a8842"/><rect x="14" y="248" width="6" height="14" fill="#5c3820"/></g>
+      <g transform="translate(1018,8)"><polygon points="0,240 20,177 40,240" fill="#28622e"/><polygon points="2,226 20,163 38,226" fill="#317538"/><polygon points="5,212 20,152 35,212" fill="#3a8842"/><rect x="16" y="240" width="8" height="16" fill="#5c3820"/></g>
+      <g transform="translate(1100,3)"><polygon points="0,244 16,190 32,244" fill="#28622e"/><polygon points="2,230 16,176 30,230" fill="#317538"/><polygon points="4,216 16,164 28,216" fill="#3a8842"/><rect x="13" y="244" width="6" height="13" fill="#5c3820"/></g>
+      <g transform="translate(1178,0)"><polygon points="0,246 22,180 44,246" fill="#28622e"/><polygon points="3,232 22,165 41,232" fill="#317538"/><polygon points="6,217 22,154 38,217" fill="#3a8842"/><rect x="18" y="246" width="8" height="14" fill="#5c3820"/></g>
+      <g transform="translate(1268,6)"><polygon points="0,241 17,186 34,241" fill="#28622e"/><polygon points="2,227 17,172 32,227" fill="#317538"/><polygon points="4,213 17,160 30,213" fill="#3a8842"/><rect x="14" y="241" width="6" height="14" fill="#5c3820"/></g>
+      <g transform="translate(1348,1)"><polygon points="0,245 20,182 40,245" fill="#28622e"/><polygon points="2,231 20,167 38,231" fill="#317538"/><polygon points="5,217 20,156 35,217" fill="#3a8842"/><rect x="16" y="245" width="8" height="14" fill="#5c3820"/></g>
+      <g transform="translate(1434,5)"><polygon points="0,242 16,188 32,242" fill="#28622e"/><polygon points="2,228 16,174 30,228" fill="#317538"/><polygon points="4,214 16,162 28,214" fill="#3a8842"/><rect x="13" y="242" width="6" height="13" fill="#5c3820"/></g>
+      <g transform="translate(1514,0)"><polygon points="0,247 22,181 44,247" fill="#28622e"/><polygon points="3,233 22,166 41,233" fill="#317538"/><polygon points="6,218 22,154 38,218" fill="#3a8842"/><rect x="18" y="247" width="8" height="13" fill="#5c3820"/></g>
+      <g transform="translate(1606,4)"><polygon points="0,243 18,184 36,243" fill="#28622e"/><polygon points="2,229 18,170 34,229" fill="#317538"/><polygon points="5,215 18,158 31,215" fill="#3a8842"/><rect x="15" y="243" width="6" height="14" fill="#5c3820"/></g>
+      <g transform="translate(1692,2)"><polygon points="0,245 19,186 38,245" fill="#28622e"/><polygon points="2,231 19,172 36,231" fill="#317538"/><polygon points="5,217 19,160 33,217" fill="#3a8842"/><rect x="15" y="245" width="7" height="14" fill="#5c3820"/></g>
+      <g transform="translate(1768,7)"><polygon points="0,240 16,186 32,240" fill="#28622e"/><polygon points="2,226 16,172 30,226" fill="#317538"/><polygon points="4,212 16,160 28,212" fill="#3a8842"/><rect x="13" y="240" width="6" height="13" fill="#5c3820"/></g>
+    </g>
+
+    <!-- RIVER -->
+    <g class="tsr">
+      <rect x="0" y="268" width="1800" height="26" fill="url(#ts-water)"/>
+      <line x1="40"   y1="276" x2="110"  y2="276" stroke="rgba(255,255,255,0.38)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="190"  y1="281" x2="280"  y2="281" stroke="rgba(255,255,255,0.25)" stroke-width="1"   stroke-linecap="round"/>
+      <line x1="370"  y1="274" x2="460"  y2="274" stroke="rgba(255,255,255,0.38)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="540"  y1="280" x2="640"  y2="280" stroke="rgba(255,255,255,0.25)" stroke-width="1"   stroke-linecap="round"/>
+      <line x1="710"  y1="275" x2="800"  y2="275" stroke="rgba(255,255,255,0.38)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="860"  y1="279" x2="900"  y2="279" stroke="rgba(255,255,255,0.25)" stroke-width="1"   stroke-linecap="round"/>
+      <line x1="940"  y1="276" x2="1010" y2="276" stroke="rgba(255,255,255,0.38)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="1090" y1="281" x2="1180" y2="281" stroke="rgba(255,255,255,0.25)" stroke-width="1"   stroke-linecap="round"/>
+      <line x1="1270" y1="274" x2="1360" y2="274" stroke="rgba(255,255,255,0.38)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="1440" y1="280" x2="1540" y2="280" stroke="rgba(255,255,255,0.25)" stroke-width="1"   stroke-linecap="round"/>
+      <line x1="1610" y1="275" x2="1700" y2="275" stroke="rgba(255,255,255,0.38)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="1760" y1="279" x2="1800" y2="279" stroke="rgba(255,255,255,0.25)" stroke-width="1"   stroke-linecap="round"/>
+    </g>
+
+    <!-- GRASS FOREGROUND -->
+    <g class="tsg">
+      <rect x="0" y="292" width="1800" height="48" fill="#48a848"/>
+      <rect x="0" y="292" width="1800" height="7"  fill="#3a9a3a"/>
+      <!-- grass tufts -->
+      <rect x="10"   y="289" width="3" height="8"  rx="1" fill="#58c058"/><rect x="48"   y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="88"   y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="140"  y="288" width="3" height="9"  rx="1" fill="#58c058"/>
+      <rect x="192"  y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="240"  y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="285"  y="289" width="3" height="8"  rx="1" fill="#58c058"/><rect x="335"  y="288" width="3" height="9"  rx="1" fill="#58c058"/>
+      <rect x="385"  y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="435"  y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="480"  y="289" width="3" height="8"  rx="1" fill="#58c058"/><rect x="530"  y="288" width="3" height="9"  rx="1" fill="#58c058"/>
+      <rect x="580"  y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="630"  y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="676"  y="289" width="3" height="8"  rx="1" fill="#58c058"/><rect x="726"  y="288" width="3" height="9"  rx="1" fill="#58c058"/>
+      <rect x="776"  y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="826"  y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="870"  y="289" width="3" height="8"  rx="1" fill="#58c058"/>
+      <!-- duplicates +900 -->
+      <rect x="910"  y="289" width="3" height="8"  rx="1" fill="#58c058"/><rect x="948"  y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="988"  y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="1040" y="288" width="3" height="9"  rx="1" fill="#58c058"/>
+      <rect x="1092" y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="1140" y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="1185" y="289" width="3" height="8"  rx="1" fill="#58c058"/><rect x="1235" y="288" width="3" height="9"  rx="1" fill="#58c058"/>
+      <rect x="1285" y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="1335" y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="1380" y="289" width="3" height="8"  rx="1" fill="#58c058"/><rect x="1430" y="288" width="3" height="9"  rx="1" fill="#58c058"/>
+      <rect x="1480" y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="1530" y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="1576" y="289" width="3" height="8"  rx="1" fill="#58c058"/><rect x="1626" y="288" width="3" height="9"  rx="1" fill="#58c058"/>
+      <rect x="1676" y="290" width="3" height="8"  rx="1" fill="#58c058"/><rect x="1726" y="287" width="3" height="10" rx="1" fill="#58c058"/>
+      <rect x="1770" y="289" width="3" height="8"  rx="1" fill="#58c058"/>
+    </g>
+
+    <!-- RAIL SLEEPERS -->
+    <g class="tsi">
+      <rect x="3"    y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="33"   y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="63"   y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="93"   y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="123"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="153"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="183"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="213"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="243"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="273"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="303"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="333"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="363"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="393"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="423"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="453"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="483"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="513"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="543"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="573"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="603"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="633"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="663"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="693"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="723"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="753"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="783"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="813"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="843"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="873"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <!-- duplicates +900 -->
+      <rect x="903"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="933"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="963"  y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="993"  y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1023" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1053" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1083" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1113" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1143" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1173" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1203" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1233" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1263" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1293" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1323" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1353" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1383" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1413" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1443" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1473" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1503" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1533" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1563" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1593" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1623" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1653" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1683" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1713" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+      <rect x="1743" y="298" width="22" height="12" rx="2" fill="#7a5c38"/><rect x="1773" y="298" width="22" height="12" rx="2" fill="#6c5030"/>
+    </g>
+
+    <!-- RAILS (static) -->
+    <rect x="0" y="297" width="900" height="4" rx="1" fill="#9a9890"/>
+    <rect x="0" y="308" width="900" height="3" rx="1" fill="#9a9890"/>
+
+    <!-- TRAIN (static) -->
+    <g>
+      <!-- shadow -->
+      <ellipse cx="358" cy="314" rx="300" ry="5" fill="rgba(0,0,0,0.2)"/>
+
+      <!-- ── LOCOMOTIVE (x=66–218) facing LEFT ── -->
+      <path d="M218,283 L102,283 Q76,282 64,266 L64,244 Q66,226 82,214 L110,208 L218,208 Z" fill="url(#ts-lbody)"/>
+      <!-- roof strip -->
+      <path d="M218,208 L110,208 L94,213 L218,213 Z" fill="#aeaaa4"/>
+      <!-- red stripe -->
+      <path d="M218,253 L74,253 L66,261 L66,248 L72,244 L218,244 Z" fill="#d62d61"/>
+      <!-- front windshield glass -->
+      <path d="M106,213 L84,220 Q68,231 66,246 L66,263 Q67,271 78,277 L106,277 Z" fill="#2a6b8a" opacity="0.88"/>
+      <!-- windshield frame -->
+      <path d="M106,213 L84,220 Q68,231 66,246 L66,263 Q67,271 78,277 L106,277" fill="none" stroke="#c8c5c0" stroke-width="1.5"/>
+      <!-- headlights -->
+      <circle cx="66" cy="240" r="4.5" fill="#fffde0" opacity="0.95"/>
+      <circle cx="66" cy="240" r="6"   fill="none" stroke="#d4b840" stroke-width="1.2"/>
+      <circle cx="66" cy="260" r="3.5" fill="#fffde0" opacity="0.85"/>
+      <!-- side windows -->
+      <rect x="120" y="218" width="32" height="22" rx="3" fill="#3a8ab0" opacity="0.82"/>
+      <rect x="160" y="218" width="32" height="22" rx="3" fill="#3a8ab0" opacity="0.82"/>
+      <rect x="120" y="218" width="32" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="160" y="218" width="32" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <!-- vent grille -->
+      <rect x="120" y="256" width="94" height="5" rx="2" fill="#b0ada8" opacity="0.5"/>
+      <!-- bottom skirt -->
+      <rect x="88" y="280" width="130" height="5" rx="1" fill="#96938e"/>
+      <!-- coupler -->
+      <rect x="58" y="268" width="8" height="5" rx="1" fill="#686460"/>
+      <!-- pantograph -->
+      <line x1="155" y1="208" x2="145" y2="195" stroke="#888" stroke-width="1.5"/>
+      <line x1="178" y1="208" x2="168" y2="195" stroke="#888" stroke-width="1.5"/>
+      <line x1="145" y1="195" x2="168" y2="195" stroke="#555" stroke-width="2"/>
+      <line x1="151" y1="195" x2="151" y2="190" stroke="#888" stroke-width="1.5"/>
+      <line x1="163" y1="195" x2="163" y2="190" stroke="#888" stroke-width="1.5"/>
+      <line x1="148" y1="190" x2="167" y2="190" stroke="#444" stroke-width="2.5"/>
+      <!-- bogies -->
+      <rect x="78"  y="282" width="42" height="8" rx="1" fill="#363330"/>
+      <circle cx="88"  cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="110" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="88"  cy="295" r="2.5" fill="#686562"/>
+      <circle cx="110" cy="295" r="2.5" fill="#686562"/>
+      <rect x="162" y="282" width="42" height="8" rx="1" fill="#363330"/>
+      <circle cx="172" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="194" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="172" cy="295" r="2.5" fill="#686562"/>
+      <circle cx="194" cy="295" r="2.5" fill="#686562"/>
+
+      <!-- inter-car gap 1 -->
+      <rect x="216" y="238" width="6" height="46" rx="1" fill="#808080"/>
+
+      <!-- ── WAGON 1 (x=222–400) ── -->
+      <rect x="222" y="208" width="178" height="75" fill="url(#ts-tbody)"/>
+      <rect x="222" y="208" width="178" height="6"  fill="#b0aca7"/>
+      <rect x="222" y="248" width="178" height="15" fill="#d62d61"/>
+      <!-- windows -->
+      <rect x="232" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="266" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="300" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="334" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="368" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="232" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="266" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="300" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="334" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="368" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <!-- doors -->
+      <rect x="222" y="214" width="15" height="65" rx="1" fill="#dedad5"/>
+      <rect x="385" y="214" width="15" height="65" rx="1" fill="#dedad5"/>
+      <rect x="231" y="246" width="4" height="9" rx="2" fill="#9a9a9a"/>
+      <rect x="386" y="246" width="4" height="9" rx="2" fill="#9a9a9a"/>
+      <!-- skirt -->
+      <rect x="222" y="280" width="178" height="5" rx="0" fill="#96938e"/>
+      <!-- bogies -->
+      <rect x="238" y="282" width="42" height="8" rx="1" fill="#363330"/>
+      <circle cx="248" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="270" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="248" cy="295" r="2.5" fill="#686562"/>
+      <circle cx="270" cy="295" r="2.5" fill="#686562"/>
+      <rect x="350" y="282" width="42" height="8" rx="1" fill="#363330"/>
+      <circle cx="360" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="382" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="360" cy="295" r="2.5" fill="#686562"/>
+      <circle cx="382" cy="295" r="2.5" fill="#686562"/>
+
+      <!-- inter-car gap 2 -->
+      <rect x="398" y="238" width="6" height="46" rx="1" fill="#808080"/>
+
+      <!-- ── WAGON 2 (x=404–582) ── -->
+      <rect x="404" y="208" width="178" height="75" fill="url(#ts-tbody)"/>
+      <rect x="404" y="208" width="178" height="6"  fill="#b0aca7"/>
+      <rect x="404" y="248" width="178" height="15" fill="#d62d61"/>
+      <!-- windows -->
+      <rect x="414" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="448" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="482" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="516" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="550" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="414" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="448" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="482" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="516" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="550" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <!-- doors -->
+      <rect x="404" y="214" width="15" height="65" rx="1" fill="#dedad5"/>
+      <rect x="567" y="214" width="15" height="65" rx="1" fill="#dedad5"/>
+      <rect x="413" y="246" width="4" height="9" rx="2" fill="#9a9a9a"/>
+      <rect x="568" y="246" width="4" height="9" rx="2" fill="#9a9a9a"/>
+      <!-- skirt -->
+      <rect x="404" y="280" width="178" height="5" rx="0" fill="#96938e"/>
+      <!-- bogies -->
+      <rect x="420" y="282" width="42" height="8" rx="1" fill="#363330"/>
+      <circle cx="430" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="452" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="430" cy="295" r="2.5" fill="#686562"/>
+      <circle cx="452" cy="295" r="2.5" fill="#686562"/>
+      <rect x="532" y="282" width="42" height="8" rx="1" fill="#363330"/>
+      <circle cx="542" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="564" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="542" cy="295" r="2.5" fill="#686562"/>
+      <circle cx="564" cy="295" r="2.5" fill="#686562"/>
+      <!-- pantograph wagon 2 -->
+      <line x1="454" y1="208" x2="444" y2="196" stroke="#888" stroke-width="1.5"/>
+      <line x1="476" y1="208" x2="466" y2="196" stroke="#888" stroke-width="1.5"/>
+      <line x1="444" y1="196" x2="466" y2="196" stroke="#555" stroke-width="2"/>
+      <line x1="450" y1="196" x2="450" y2="191" stroke="#888" stroke-width="1.5"/>
+      <line x1="461" y1="196" x2="461" y2="191" stroke="#888" stroke-width="1.5"/>
+      <line x1="447" y1="191" x2="464" y2="191" stroke="#444" stroke-width="2.5"/>
+
+      <!-- inter-car gap 3 -->
+      <rect x="580" y="238" width="6" height="46" rx="1" fill="#808080"/>
+
+      <!-- ── TAIL CAR (x=586–662) ── -->
+      <path d="M586,208 L642,208 Q662,208 662,228 L662,263 Q662,283 642,283 L586,283 Z" fill="url(#ts-tbody)"/>
+      <rect x="586" y="208" width="76" height="6" fill="#b0aca7"/>
+      <rect x="586" y="248" width="76" height="15" fill="#d62d61"/>
+      <!-- windows -->
+      <rect x="594" y="218" width="26" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="628" y="218" width="24" height="22" rx="3" fill="#4a9ebb" opacity="0.85"/>
+      <rect x="594" y="218" width="26" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <rect x="628" y="218" width="24" height="22" rx="3" fill="none" stroke="#c0bdb8" stroke-width="1"/>
+      <!-- tail light -->
+      <circle cx="658" cy="252" r="4.5" fill="#e03030" opacity="0.92"/>
+      <circle cx="658" cy="252" r="6"   fill="none" stroke="#b82020" stroke-width="1"/>
+      <!-- skirt -->
+      <path d="M586,280 L642,280 Q656,280 660,268 L660,280 Z" fill="#96938e"/>
+      <!-- bogie -->
+      <rect x="600" y="282" width="42" height="8" rx="1" fill="#363330"/>
+      <circle cx="610" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="632" cy="295" r="7" fill="#282522" stroke="#484542" stroke-width="1.5"/>
+      <circle cx="610" cy="295" r="2.5" fill="#686562"/>
+      <circle cx="632" cy="295" r="2.5" fill="#686562"/>
+    </g>
+  </svg>
+  </div>
+
+  <!-- NIGHT SCENE -->
+  <div class="train-scene train-night">
+    <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <style>
+          @keyframes tn-c { to { transform: translateX(-900px); } }
+          @keyframes tn-m { to { transform: translateX(-900px); } }
+          @keyframes tn-h { to { transform: translateX(-900px); } }
+          @keyframes tn-t { to { transform: translateX(-900px); } }
+          @keyframes tn-r { to { transform: translateX(-900px); } }
+          @keyframes tn-g { to { transform: translateX(-900px); } }
+          @keyframes tn-i { to { transform: translateX(-900px); } }
+          @keyframes tn-twinkle { 0%,100%{opacity:.9} 50%{opacity:.3} }
+          .tnc { animation: tn-c 50s  linear infinite; }
+          .tnm { animation: tn-m 34s  linear infinite; }
+          .tnh { animation: tn-h 20s  linear infinite; }
+          .tnt { animation: tn-t 13s  linear infinite; }
+          .tnr { animation: tn-r 16s  linear infinite; }
+          .tng { animation: tn-g  8s  linear infinite; }
+          .tni { animation: tn-i 2.4s linear infinite; }
+        </style>
+        <linearGradient id="tn-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#01040e"/>
+          <stop offset="50%"  stop-color="#040c22"/>
+          <stop offset="100%" stop-color="#091830"/>
+        </linearGradient>
+        <linearGradient id="tn-water" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#0b1e35"/>
+          <stop offset="100%" stop-color="#071428"/>
+        </linearGradient>
+        <linearGradient id="tn-tbody" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#2a2826"/>
+          <stop offset="100%" stop-color="#38342e"/>
+        </linearGradient>
+        <linearGradient id="tn-lbody" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stop-color="#201e1c"/>
+          <stop offset="100%" stop-color="#38342e"/>
+        </linearGradient>
+        <radialGradient id="tn-moon-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#fffbe0" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#fffbe0" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="tn-headlight" cx="0%" cy="50%" r="100%">
+          <stop offset="0%"   stop-color="#fff8c0" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#fff8c0" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <!-- SKY -->
+      <rect width="900" height="340" fill="url(#tn-sky)"/>
+
+      <!-- STARS (static) -->
+      <g opacity="0.9">
+        <circle cx="42"  cy="18"  r="1"   fill="white"/><circle cx="88"  cy="34"  r="1.5" fill="white" style="animation:tn-twinkle 3.2s ease-in-out infinite"/>
+        <circle cx="134" cy="12"  r="1"   fill="white"/><circle cx="178" cy="44"  r="1.2" fill="white" style="animation:tn-twinkle 4.1s ease-in-out infinite 0.5s"/>
+        <circle cx="220" cy="22"  r="1.5" fill="white"/><circle cx="265" cy="8"   r="1"   fill="white"/>
+        <circle cx="310" cy="38"  r="1.2" fill="white" style="animation:tn-twinkle 2.8s ease-in-out infinite 1s"/><circle cx="350" cy="16"  r="1"   fill="white"/>
+        <circle cx="398" cy="28"  r="1.5" fill="white" style="animation:tn-twinkle 3.7s ease-in-out infinite 0.3s"/><circle cx="445" cy="10"  r="1"   fill="white"/>
+        <circle cx="490" cy="42"  r="1.2" fill="white"/><circle cx="535" cy="20"  r="1.5" fill="white" style="animation:tn-twinkle 2.5s ease-in-out infinite 0.8s"/>
+        <circle cx="578" cy="6"   r="1"   fill="white"/><circle cx="618" cy="32"  r="1.2" fill="white"/>
+        <circle cx="660" cy="18"  r="1.5" fill="white" style="animation:tn-twinkle 4.3s ease-in-out infinite 0.2s"/><circle cx="700" cy="48"  r="1"   fill="white"/>
+        <circle cx="62"  cy="56"  r="1"   fill="white" opacity="0.7"/><circle cx="155" cy="68"  r="1.2" fill="white" opacity="0.7"/>
+        <circle cx="245" cy="52"  r="1"   fill="white" opacity="0.7"/><circle cx="335" cy="64"  r="1.2" fill="white" opacity="0.7"/>
+        <circle cx="430" cy="55"  r="1"   fill="white" opacity="0.7"/><circle cx="520" cy="62"  r="1.2" fill="white" opacity="0.7"/>
+        <circle cx="610" cy="49"  r="1"   fill="white" opacity="0.7"/>
+      </g>
+
+      <!-- MOON -->
+      <circle cx="800" cy="62" r="55" fill="url(#tn-moon-glow)"/>
+      <circle cx="800" cy="62" r="32" fill="#f5f0d0" opacity="0.96"/>
+      <circle cx="790" cy="55" r="4"  fill="#e8e0b0" opacity="0.5"/>
+      <circle cx="812" cy="68" r="6"  fill="#e8e0b0" opacity="0.4"/>
+      <circle cx="798" cy="72" r="3"  fill="#e8e0b0" opacity="0.5"/>
+      <circle cx="783" cy="67" r="2.5" fill="#e8e0b0" opacity="0.4"/>
+
+      <!-- FAR MOUNTAINS (night silhouettes) -->
+      <g class="tnm" fill="#080f1a">
+        <polygon points="  0,222  85,80 170,222"/>
+        <polygon points=" 70,222 175,62 280,222" fill="#060c16"/>
+        <polygon points="190,222 305,88 420,222"/>
+        <polygon points="330,222 440,68 550,222" fill="#060c16"/>
+        <polygon points="460,222 575,84 690,222"/>
+        <polygon points="610,222 718,66 826,222" fill="#060c16"/>
+        <polygon points="730,222 848,82 966,222"/>
+        <polygon points=" 900,222  985,80 1070,222"/>
+        <polygon points=" 970,222 1075,62 1180,222" fill="#060c16"/>
+        <polygon points="1090,222 1205,88 1320,222"/>
+        <polygon points="1230,222 1340,68 1450,222" fill="#060c16"/>
+        <polygon points="1360,222 1475,84 1590,222"/>
+        <polygon points="1510,222 1618,66 1726,222" fill="#060c16"/>
+        <polygon points="1630,222 1748,82 1866,222"/>
+      </g>
+
+      <!-- NEAR HILLS (night) -->
+      <g class="tnh">
+        <path d="M0,272 Q110,210 220,248 Q340,278 460,218 Q560,182 660,228 Q760,262 900,216 L900,340 L0,340 Z" fill="#06100a"/>
+        <path d="M900,272 Q1010,210 1120,248 Q1240,278 1360,218 Q1460,182 1560,228 Q1660,262 1800,216 L1800,340 L900,340 Z" fill="#06100a"/>
+      </g>
+
+      <!-- PINE TREES (night silhouettes) -->
+      <g class="tnt">
+        <g transform="translate(45,0)"><polygon points="0,248 17,194 34,248" fill="#030706"/><polygon points="2,234 17,180 32,234" fill="#050a07"/><polygon points="5,220 17,168 29,220" fill="#07100a"/><rect x="14" y="248" width="6" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(118,8)"><polygon points="0,240 20,177 40,240" fill="#030706"/><polygon points="2,226 20,163 38,226" fill="#050a07"/><polygon points="5,212 20,152 35,212" fill="#07100a"/><rect x="16" y="240" width="8" height="16" fill="#1a0e06"/></g>
+        <g transform="translate(200,3)"><polygon points="0,244 16,190 32,244" fill="#030706"/><polygon points="2,230 16,176 30,230" fill="#050a07"/><polygon points="4,216 16,164 28,216" fill="#07100a"/><rect x="13" y="244" width="6" height="13" fill="#1a0e06"/></g>
+        <g transform="translate(278,0)"><polygon points="0,246 22,180 44,246" fill="#030706"/><polygon points="3,232 22,165 41,232" fill="#050a07"/><polygon points="6,217 22,154 38,217" fill="#07100a"/><rect x="18" y="246" width="8" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(368,6)"><polygon points="0,241 17,186 34,241" fill="#030706"/><polygon points="2,227 17,172 32,227" fill="#050a07"/><polygon points="4,213 17,160 30,213" fill="#07100a"/><rect x="14" y="241" width="6" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(448,1)"><polygon points="0,245 20,182 40,245" fill="#030706"/><polygon points="2,231 20,167 38,231" fill="#050a07"/><polygon points="5,217 20,156 35,217" fill="#07100a"/><rect x="16" y="245" width="8" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(534,5)"><polygon points="0,242 16,188 32,242" fill="#030706"/><polygon points="2,228 16,174 30,228" fill="#050a07"/><polygon points="4,214 16,162 28,214" fill="#07100a"/><rect x="13" y="242" width="6" height="13" fill="#1a0e06"/></g>
+        <g transform="translate(614,0)"><polygon points="0,247 22,181 44,247" fill="#030706"/><polygon points="3,233 22,166 41,233" fill="#050a07"/><polygon points="6,218 22,154 38,218" fill="#07100a"/><rect x="18" y="247" width="8" height="13" fill="#1a0e06"/></g>
+        <g transform="translate(706,4)"><polygon points="0,243 18,184 36,243" fill="#030706"/><polygon points="2,229 18,170 34,229" fill="#050a07"/><polygon points="5,215 18,158 31,215" fill="#07100a"/><rect x="15" y="243" width="6" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(792,2)"><polygon points="0,245 19,186 38,245" fill="#030706"/><polygon points="2,231 19,172 36,231" fill="#050a07"/><polygon points="5,217 19,160 33,217" fill="#07100a"/><rect x="15" y="245" width="7" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(868,7)"><polygon points="0,240 16,186 32,240" fill="#030706"/><polygon points="2,226 16,172 30,226" fill="#050a07"/><polygon points="4,212 16,160 28,212" fill="#07100a"/><rect x="13" y="240" width="6" height="13" fill="#1a0e06"/></g>
+        <!-- duplicates +900 -->
+        <g transform="translate(945,0)"><polygon points="0,248 17,194 34,248" fill="#030706"/><polygon points="2,234 17,180 32,234" fill="#050a07"/><polygon points="5,220 17,168 29,220" fill="#07100a"/><rect x="14" y="248" width="6" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(1018,8)"><polygon points="0,240 20,177 40,240" fill="#030706"/><polygon points="2,226 20,163 38,226" fill="#050a07"/><polygon points="5,212 20,152 35,212" fill="#07100a"/><rect x="16" y="240" width="8" height="16" fill="#1a0e06"/></g>
+        <g transform="translate(1100,3)"><polygon points="0,244 16,190 32,244" fill="#030706"/><polygon points="2,230 16,176 30,230" fill="#050a07"/><polygon points="4,216 16,164 28,216" fill="#07100a"/><rect x="13" y="244" width="6" height="13" fill="#1a0e06"/></g>
+        <g transform="translate(1178,0)"><polygon points="0,246 22,180 44,246" fill="#030706"/><polygon points="3,232 22,165 41,232" fill="#050a07"/><polygon points="6,217 22,154 38,217" fill="#07100a"/><rect x="18" y="246" width="8" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(1268,6)"><polygon points="0,241 17,186 34,241" fill="#030706"/><polygon points="2,227 17,172 32,227" fill="#050a07"/><polygon points="4,213 17,160 30,213" fill="#07100a"/><rect x="14" y="241" width="6" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(1348,1)"><polygon points="0,245 20,182 40,245" fill="#030706"/><polygon points="2,231 20,167 38,231" fill="#050a07"/><polygon points="5,217 20,156 35,217" fill="#07100a"/><rect x="16" y="245" width="8" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(1434,5)"><polygon points="0,242 16,188 32,242" fill="#030706"/><polygon points="2,228 16,174 30,228" fill="#050a07"/><polygon points="4,214 16,162 28,214" fill="#07100a"/><rect x="13" y="242" width="6" height="13" fill="#1a0e06"/></g>
+        <g transform="translate(1514,0)"><polygon points="0,247 22,181 44,247" fill="#030706"/><polygon points="3,233 22,166 41,233" fill="#050a07"/><polygon points="6,218 22,154 38,218" fill="#07100a"/><rect x="18" y="247" width="8" height="13" fill="#1a0e06"/></g>
+        <g transform="translate(1606,4)"><polygon points="0,243 18,184 36,243" fill="#030706"/><polygon points="2,229 18,170 34,229" fill="#050a07"/><polygon points="5,215 18,158 31,215" fill="#07100a"/><rect x="15" y="243" width="6" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(1692,2)"><polygon points="0,245 19,186 38,245" fill="#030706"/><polygon points="2,231 19,172 36,231" fill="#050a07"/><polygon points="5,217 19,160 33,217" fill="#07100a"/><rect x="15" y="245" width="7" height="14" fill="#1a0e06"/></g>
+        <g transform="translate(1768,7)"><polygon points="0,240 16,186 32,240" fill="#030706"/><polygon points="2,226 16,172 30,226" fill="#050a07"/><polygon points="4,212 16,160 28,212" fill="#07100a"/><rect x="13" y="240" width="6" height="13" fill="#1a0e06"/></g>
+      </g>
+
+      <!-- RIVER (moonlit) -->
+      <g class="tnr">
+        <rect x="0" y="268" width="1800" height="26" fill="url(#tn-water)"/>
+        <line x1="40"   y1="274" x2="110"  y2="274" stroke="rgba(200,220,255,0.25)" stroke-width="2"   stroke-linecap="round"/>
+        <line x1="200"  y1="278" x2="280"  y2="278" stroke="rgba(200,220,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="380"  y1="273" x2="460"  y2="273" stroke="rgba(200,220,255,0.25)" stroke-width="2"   stroke-linecap="round"/>
+        <line x1="560"  y1="279" x2="640"  y2="279" stroke="rgba(200,220,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="720"  y1="274" x2="810"  y2="274" stroke="rgba(200,220,255,0.25)" stroke-width="2"   stroke-linecap="round"/>
+        <line x1="870"  y1="277" x2="900"  y2="277" stroke="rgba(200,220,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="940"  y1="274" x2="1010" y2="274" stroke="rgba(200,220,255,0.25)" stroke-width="2"   stroke-linecap="round"/>
+        <line x1="1100" y1="278" x2="1180" y2="278" stroke="rgba(200,220,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="1280" y1="273" x2="1360" y2="273" stroke="rgba(200,220,255,0.25)" stroke-width="2"   stroke-linecap="round"/>
+        <line x1="1460" y1="279" x2="1540" y2="279" stroke="rgba(200,220,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="1620" y1="274" x2="1710" y2="274" stroke="rgba(200,220,255,0.25)" stroke-width="2"   stroke-linecap="round"/>
+        <line x1="1770" y1="277" x2="1800" y2="277" stroke="rgba(200,220,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
+      </g>
+
+      <!-- GRASS (night, very dark) -->
+      <g class="tng">
+        <rect x="0" y="292" width="1800" height="48" fill="#050d06"/>
+        <rect x="0" y="292" width="1800" height="6"  fill="#04090508"/>
+      </g>
+
+      <!-- RAIL SLEEPERS (night) -->
+      <g class="tni">
+        <rect x="3"    y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="33"   y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="63"   y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="93"   y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="123"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="153"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="183"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="213"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="243"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="273"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="303"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="333"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="363"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="393"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="423"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="453"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="483"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="513"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="543"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="573"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="603"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="633"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="663"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="693"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="723"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="753"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="783"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="813"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="843"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="873"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <!-- duplicates -->
+        <rect x="903"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="933"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="963"  y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="993"  y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1023" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1053" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1083" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1113" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1143" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1173" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1203" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1233" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1263" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1293" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1323" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1353" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1383" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1413" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1443" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1473" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1503" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1533" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1563" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1593" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1623" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1653" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1683" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1713" y="298" width="22" height="12" rx="2" fill="#261808"/>
+        <rect x="1743" y="298" width="22" height="12" rx="2" fill="#2e1e10"/><rect x="1773" y="298" width="22" height="12" rx="2" fill="#261808"/>
+      </g>
+
+      <!-- RAILS -->
+      <rect x="0" y="297" width="900" height="4" rx="1" fill="#4a4845"/>
+      <rect x="0" y="308" width="900" height="3" rx="1" fill="#4a4845"/>
+
+      <!-- TRAIN (night — darker body, lit windows) -->
+      <g>
+        <ellipse cx="358" cy="314" rx="300" ry="5" fill="rgba(0,0,0,0.35)"/>
+        <!-- Headlight cone -->
+        <polygon points="64,246 -60,200 -60,292" fill="url(#tn-headlight)" opacity="0.6"/>
+
+        <!-- LOCOMOTIVE -->
+        <path d="M218,283 L102,283 Q76,282 64,266 L64,244 Q66,226 82,214 L110,208 L218,208 Z" fill="url(#tn-lbody)"/>
+        <path d="M218,208 L110,208 L94,213 L218,213 Z" fill="#181614"/>
+        <path d="M218,253 L74,253 L66,261 L66,248 L72,244 L218,244 Z" fill="#b02050"/>
+        <path d="M106,213 L84,220 Q68,231 66,246 L66,263 Q67,271 78,277 L106,277 Z" fill="#1a3545" opacity="0.9"/>
+        <path d="M106,213 L84,220 Q68,231 66,246 L66,263 Q67,271 78,277 L106,277" fill="none" stroke="#3a3530" stroke-width="1.5"/>
+        <!-- Headlights bright -->
+        <circle cx="66" cy="240" r="6"   fill="#fff8a0"/>
+        <circle cx="66" cy="240" r="10"  fill="rgba(255,248,160,0.25)"/>
+        <circle cx="66" cy="240" r="4.5" fill="white"/>
+        <circle cx="66" cy="260" r="4"   fill="#fff8a0"/>
+        <circle cx="66" cy="260" r="7"   fill="rgba(255,248,160,0.2)"/>
+        <!-- Side windows LIT -->
+        <rect x="120" y="218" width="32" height="22" rx="3" fill="#f5d870" opacity="0.85"/>
+        <rect x="160" y="218" width="32" height="22" rx="3" fill="#f5d870" opacity="0.85"/>
+        <rect x="120" y="218" width="32" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <rect x="160" y="218" width="32" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <!-- Pantograph -->
+        <line x1="155" y1="208" x2="145" y2="195" stroke="#555" stroke-width="1.5"/>
+        <line x1="178" y1="208" x2="168" y2="195" stroke="#555" stroke-width="1.5"/>
+        <line x1="145" y1="195" x2="168" y2="195" stroke="#333" stroke-width="2"/>
+        <line x1="151" y1="195" x2="151" y2="190" stroke="#555" stroke-width="1.5"/>
+        <line x1="163" y1="195" x2="163" y2="190" stroke="#555" stroke-width="1.5"/>
+        <line x1="148" y1="190" x2="167" y2="190" stroke="#222" stroke-width="2.5"/>
+        <!-- Bogies -->
+        <rect x="78"  y="282" width="42" height="8" rx="1" fill="#1a1816"/><circle cx="88"  cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="110" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="88"  cy="295" r="2.5" fill="#383432"/><circle cx="110" cy="295" r="2.5" fill="#383432"/>
+        <rect x="162" y="282" width="42" height="8" rx="1" fill="#1a1816"/><circle cx="172" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="194" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="172" cy="295" r="2.5" fill="#383432"/><circle cx="194" cy="295" r="2.5" fill="#383432"/>
+
+        <rect x="216" y="238" width="6" height="46" rx="1" fill="#444"/>
+
+        <!-- WAGON 1 -->
+        <rect x="222" y="208" width="178" height="75" fill="url(#tn-tbody)"/>
+        <rect x="222" y="208" width="178" height="6"  fill="#181614"/>
+        <rect x="222" y="248" width="178" height="15" fill="#b02050"/>
+        <!-- Lit windows -->
+        <rect x="232" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/><rect x="266" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/>
+        <rect x="300" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/><rect x="334" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/>
+        <rect x="368" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/>
+        <rect x="232" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/><rect x="266" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <rect x="300" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/><rect x="334" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <rect x="368" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <rect x="222" y="214" width="15" height="65" rx="1" fill="#282420"/><rect x="385" y="214" width="15" height="65" rx="1" fill="#282420"/>
+        <rect x="222" y="280" width="178" height="5" rx="0" fill="#3a3630"/>
+        <rect x="238" y="282" width="42" height="8" rx="1" fill="#1a1816"/><circle cx="248" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="270" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="248" cy="295" r="2.5" fill="#383432"/><circle cx="270" cy="295" r="2.5" fill="#383432"/>
+        <rect x="350" y="282" width="42" height="8" rx="1" fill="#1a1816"/><circle cx="360" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="382" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="360" cy="295" r="2.5" fill="#383432"/><circle cx="382" cy="295" r="2.5" fill="#383432"/>
+
+        <rect x="398" y="238" width="6" height="46" rx="1" fill="#444"/>
+
+        <!-- WAGON 2 -->
+        <rect x="404" y="208" width="178" height="75" fill="url(#tn-tbody)"/>
+        <rect x="404" y="208" width="178" height="6"  fill="#181614"/>
+        <rect x="404" y="248" width="178" height="15" fill="#b02050"/>
+        <rect x="414" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/><rect x="448" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/>
+        <rect x="482" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/><rect x="516" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/>
+        <rect x="550" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/>
+        <rect x="414" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/><rect x="448" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <rect x="482" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/><rect x="516" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <rect x="550" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <rect x="404" y="214" width="15" height="65" rx="1" fill="#282420"/><rect x="567" y="214" width="15" height="65" rx="1" fill="#282420"/>
+        <rect x="404" y="280" width="178" height="5" rx="0" fill="#3a3630"/>
+        <rect x="420" y="282" width="42" height="8" rx="1" fill="#1a1816"/><circle cx="430" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="452" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="430" cy="295" r="2.5" fill="#383432"/><circle cx="452" cy="295" r="2.5" fill="#383432"/>
+        <rect x="532" y="282" width="42" height="8" rx="1" fill="#1a1816"/><circle cx="542" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="564" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="542" cy="295" r="2.5" fill="#383432"/><circle cx="564" cy="295" r="2.5" fill="#383432"/>
+        <!-- Pantograph -->
+        <line x1="454" y1="208" x2="444" y2="196" stroke="#555" stroke-width="1.5"/><line x1="476" y1="208" x2="466" y2="196" stroke="#555" stroke-width="1.5"/>
+        <line x1="444" y1="196" x2="466" y2="196" stroke="#333" stroke-width="2"/>
+        <line x1="450" y1="196" x2="450" y2="191" stroke="#555" stroke-width="1.5"/><line x1="461" y1="196" x2="461" y2="191" stroke="#555" stroke-width="1.5"/>
+        <line x1="447" y1="191" x2="464" y2="191" stroke="#222" stroke-width="2.5"/>
+
+        <rect x="580" y="238" width="6" height="46" rx="1" fill="#444"/>
+
+        <!-- TAIL CAR -->
+        <path d="M586,208 L642,208 Q662,208 662,228 L662,263 Q662,283 642,283 L586,283 Z" fill="url(#tn-tbody)"/>
+        <rect x="586" y="208" width="76" height="6" fill="#181614"/>
+        <rect x="586" y="248" width="76" height="15" fill="#b02050"/>
+        <rect x="594" y="218" width="26" height="22" rx="3" fill="#f5d870" opacity="0.88"/>
+        <rect x="628" y="218" width="24" height="22" rx="3" fill="#f5d870" opacity="0.88"/>
+        <rect x="594" y="218" width="26" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <rect x="628" y="218" width="24" height="22" rx="3" fill="none" stroke="#6a5a20" stroke-width="1"/>
+        <!-- Tail lights (red) -->
+        <circle cx="658" cy="248" r="5"   fill="#ff2020" opacity="0.95"/>
+        <circle cx="658" cy="248" r="9"   fill="rgba(255,30,30,0.3)"/>
+        <circle cx="658" cy="260" r="4"   fill="#ff2020" opacity="0.85"/>
+        <circle cx="658" cy="260" r="7"   fill="rgba(255,30,30,0.25)"/>
+        <rect x="586" y="280" width="76" height="5" fill="#3a3630"/>
+        <rect x="600" y="282" width="42" height="8" rx="1" fill="#1a1816"/>
+        <circle cx="610" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/><circle cx="632" cy="295" r="7" fill="#0e0c0a" stroke="#2a2825" stroke-width="1.5"/>
+        <circle cx="610" cy="295" r="2.5" fill="#383432"/><circle cx="632" cy="295" r="2.5" fill="#383432"/>
+      </g>
+    </svg>
   </div>
 </section>
 
@@ -145,12 +773,13 @@
 <section id="architecture">
   <div class="container">
     <div class="section-header fade-in">
-      <h2 data-i18n="arch.title">Arquitectura del Sistema</h2>
+      <h2 data-i18n="arch.title">Arquitectura del sistema</h2>
       <p data-i18n="arch.subtitle">Un script unificado gestiona las tres fuentes de datos y optimiza el consumo de Azure SQL mediante batching en memoria</p>
     </div>
 
     <!-- Custom SVG Architecture Diagram with animated data flow -->
     <div class="arch-diagram-wrapper fade-in">
+      <div class="arch-night">
       <svg class="arch-svg" viewBox="0 0 680 775" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de arquitectura Renfe Scraper">
         <defs>
           <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
@@ -341,6 +970,181 @@
         </circle>
 
       </svg>
+      </div><!-- /.arch-night -->
+      <div class="arch-day">
+      <svg class="arch-svg" viewBox="0 0 680 775" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de arquitectura Renfe Scraper — modo día">
+        <defs>
+          <marker id="arr-day" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+          </marker>
+          <filter id="glow-teal-day" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="2.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow-orange-day" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- ── LABEL FUENTES ── -->
+        <text x="340" y="14" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace" letter-spacing="2">FUENTES DE DATOS</text>
+
+        <!-- ── SOURCE: gtfsrt.renfe.com ── -->
+        <a href="https://gtfsrt.renfe.com/vehicle_positions.json" target="_blank">
+          <rect x="20" y="22" width="205" height="72" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2" class="arch-node"/>
+          <text x="122" y="46" text-anchor="middle" fill="#92400e" font-size="12" font-weight="bold" font-family="monospace">gtfsrt.renfe.com</text>
+          <text x="122" y="62" text-anchor="middle" fill="#b45309" font-size="9.5" font-family="monospace">Positions · trips · alerts</text>
+          <text x="122" y="78" text-anchor="middle" fill="#78716c" font-size="9" font-family="monospace">↻ actualización cada ~20s</text>
+        </a>
+
+        <!-- ── SOURCE: Largo Recorrido API ── -->
+        <a href="https://tiempo-real.largorecorrido.renfe.com/renfe-visor/flotaLD.json" target="_blank">
+          <rect x="455" y="22" width="205" height="72" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2" class="arch-node"/>
+          <text x="557" y="46" text-anchor="middle" fill="#92400e" font-size="12" font-weight="bold" font-family="monospace">Largo Recorrido API</text>
+          <text x="557" y="62" text-anchor="middle" fill="#b45309" font-size="9.5" font-family="monospace">Flota · itinerarios · estaciones</text>
+          <text x="557" y="78" text-anchor="middle" fill="#78716c" font-size="9" font-family="monospace">↻ actualización cada ~15s</text>
+        </a>
+
+        <!-- ── LABEL HTTP GET ── -->
+        <text x="340" y="110" text-anchor="middle" fill="#94a3b8" font-size="9.5" font-family="monospace">HTTP GET cada 30s (requests)</text>
+
+        <!-- Connector paths sources → VM -->
+        <path id="p-gtfs-vm-day" d="M122,94 C122,116 240,116 240,132" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+        <path id="p-lr-vm-day"   d="M557,94 C557,116 440,116 440,132" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+
+        <!-- ── AZURE VM BOX ── -->
+        <rect x="10" y="130" width="660" height="298" rx="12" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2.5"/>
+        <rect x="10" y="130" width="660" height="48" rx="12" fill="#dbeafe"/>
+        <rect x="10" y="166" width="660" height="12" fill="#dbeafe"/>
+        <text x="340" y="152" text-anchor="middle" fill="#1d4ed8" font-size="12" font-weight="bold" font-family="monospace">Azure VM — Standard B1s</text>
+        <text x="340" y="169" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="monospace">Ubuntu 22.04  ·  systemd  ·  renfe_capture.py</text>
+
+        <!-- Inner: Cercanías Asturias -->
+        <rect x="25" y="184" width="175" height="56" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+        <text x="112" y="208" text-anchor="middle" fill="#15803d" font-size="11" font-weight="bold" font-family="monospace">Cercanías Asturias</text>
+        <text x="112" y="224" text-anchor="middle" fill="#64748b" font-size="9" font-family="monospace">BBox lat 43–43.7</text>
+
+        <!-- Inner: Cercanías Cádiz -->
+        <rect x="253" y="184" width="175" height="56" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+        <text x="340" y="208" text-anchor="middle" fill="#15803d" font-size="11" font-weight="bold" font-family="monospace">Cercanías Cádiz</text>
+        <text x="340" y="224" text-anchor="middle" fill="#64748b" font-size="9" font-family="monospace">BBox lat 36.3–37.5</text>
+
+        <!-- Inner: Largo Recorrido -->
+        <rect x="481" y="184" width="175" height="56" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+        <text x="568" y="208" text-anchor="middle" fill="#15803d" font-size="11" font-weight="bold" font-family="monospace">Largo Recorrido</text>
+        <text x="568" y="224" text-anchor="middle" fill="#64748b" font-size="9" font-family="monospace">~145 trenes activos</text>
+
+        <!-- Paths sub-boxes → Batch -->
+        <path id="p-ast-b-day" d="M112,240 L112,260 L252,260 L252,274" fill="none" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arr-day)"/>
+        <path id="p-cdz-b-day" d="M340,240 L340,274"                   fill="none" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arr-day)"/>
+        <path id="p-lr-b-day"  d="M568,240 L568,260 L428,260 L428,274" fill="none" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arr-day)"/>
+
+        <!-- Inner: Batch en memoria RAM -->
+        <rect x="215" y="274" width="250" height="56" rx="8" fill="#faf5ff" stroke="#6d28d9" stroke-width="1.5"/>
+        <text x="340" y="298" text-anchor="middle" fill="#6d28d9" font-size="12" font-weight="bold" font-family="monospace">Batch en memoria (RAM)</text>
+        <text x="340" y="314" text-anchor="middle" fill="#64748b" font-size="9" font-family="monospace">480 ciclos × 30s = 4 horas</text>
+        <text x="472" y="295" fill="#94a3b8" font-size="8.5" font-family="monospace">← 480 ciclos</text>
+        <text x="472" y="309" fill="#94a3b8" font-size="8.5" font-family="monospace">   × 30s = 4h</text>
+
+        <!-- Path Batch → azure_db -->
+        <path id="p-b-db-day" d="M340,330 L340,356" fill="none" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arr-day)"/>
+
+        <!-- Inner: azure_db.py -->
+        <rect x="215" y="356" width="250" height="56" rx="8" fill="#faf5ff" stroke="#6d28d9" stroke-width="1.5"/>
+        <text x="340" y="380" text-anchor="middle" fill="#6d28d9" font-size="12" font-weight="bold" font-family="monospace">azure_db.py (pyodbc)</text>
+        <text x="340" y="396" text-anchor="middle" fill="#64748b" font-size="9" font-family="monospace">ODBC Driver 18 · TCP 1433</text>
+
+        <!-- Path azure_db → SQL (dashed orange = flush) -->
+        <path id="p-db-sql-day" d="M340,412 L340,458" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arr-day)"/>
+        <text x="356" y="442" fill="#b45309" font-size="9" font-family="monospace">Flush cada 4h · ~12k filas</text>
+
+        <!-- ── AZURE SQL BOX ── -->
+        <rect x="10" y="458" width="660" height="178" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="2.5"/>
+        <rect x="10" y="458" width="660" height="48" rx="12" fill="#fef3c7"/>
+        <rect x="10" y="494" width="660" height="12" fill="#fef3c7"/>
+        <text x="340" y="480" text-anchor="middle" fill="#92400e" font-size="12" font-weight="bold" font-family="monospace">Azure SQL Database — Serverless</text>
+        <text x="340" y="497" text-anchor="middle" fill="#b45309" font-size="9.5" font-family="monospace">Gen5  ·  1 vCore  ·  100k vCore-s/mes  ·  free tier</text>
+
+        <!-- DB: Asturias -->
+        <rect x="25" y="540" width="185" height="62" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="117" y="566" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="bold" font-family="monospace">Asturias</text>
+        <text x="117" y="582" text-anchor="middle" fill="#64748b" font-size="9" font-family="monospace">3 tablas</text>
+
+        <!-- DB: Cádiz -->
+        <rect x="248" y="540" width="185" height="62" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="340" y="566" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="bold" font-family="monospace">Cádiz</text>
+        <text x="340" y="582" text-anchor="middle" fill="#64748b" font-size="9" font-family="monospace">3 tablas</text>
+
+        <!-- DB: Largo Recorrido -->
+        <rect x="470" y="540" width="185" height="62" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="562" y="566" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="bold" font-family="monospace">Largo Recorrido</text>
+        <text x="562" y="582" text-anchor="middle" fill="#64748b" font-size="9" font-family="monospace">2 tablas + stations</text>
+
+        <!-- Path SQL → PC -->
+        <path id="p-sql-pc-day" d="M340,636 L340,660" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-day)"/>
+        <text x="356" y="651" fill="#94a3b8" font-size="9" font-family="monospace">SSMS / pandas / Jupyter</text>
+
+        <!-- ── PC LOCAL BOX ── -->
+        <rect x="185" y="660" width="310" height="70" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+        <text x="340" y="682" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="bold" font-family="monospace">PC local (desarrollo)</text>
+        <text x="340" y="698" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="monospace">VS Code + Claude Code · Azure Data Studio</text>
+
+        <!-- ── FOOTER NOTE ── -->
+        <text x="340" y="752" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="monospace">⏸ Pausa nocturna: 23:00–06:00 UTC  ·  Auto-pause tras 1h sin conexiones</text>
+
+        <!-- ── ANIMATED DATA PACKETS ── -->
+        <circle r="4" fill="#d62d61" filter="url(#glow-teal-day)">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="0s"><mpath href="#p-gtfs-vm-day"/></animateMotion>
+        </circle>
+        <circle r="4" fill="#d62d61" filter="url(#glow-teal-day)">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.1s"><mpath href="#p-gtfs-vm-day"/></animateMotion>
+        </circle>
+        <circle r="4" fill="#d62d61" filter="url(#glow-teal-day)">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="0.4s"><mpath href="#p-lr-vm-day"/></animateMotion>
+        </circle>
+        <circle r="4" fill="#d62d61" filter="url(#glow-teal-day)">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.5s"><mpath href="#p-lr-vm-day"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#1d4ed8">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="0s"><mpath href="#p-ast-b-day"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#1d4ed8">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.8s"><mpath href="#p-ast-b-day"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#1d4ed8">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.3s"><mpath href="#p-cdz-b-day"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#1d4ed8">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="1.1s"><mpath href="#p-cdz-b-day"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#1d4ed8">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.6s"><mpath href="#p-lr-b-day"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#1d4ed8">
+          <animateMotion dur="1.6s" repeatCount="indefinite" begin="1.4s"><mpath href="#p-lr-b-day"/></animateMotion>
+        </circle>
+        <circle r="3.5" fill="#a855f7">
+          <animateMotion dur="4s" repeatCount="indefinite" begin="0s"><mpath href="#p-b-db-day"/></animateMotion>
+        </circle>
+        <circle r="3.5" fill="#a855f7">
+          <animateMotion dur="4s" repeatCount="indefinite" begin="2s"><mpath href="#p-b-db-day"/></animateMotion>
+        </circle>
+        <circle r="5.5" fill="#d97706" filter="url(#glow-orange-day)">
+          <animateMotion dur="3.5s" repeatCount="indefinite" begin="0s"><mpath href="#p-db-sql-day"/></animateMotion>
+        </circle>
+        <circle r="5.5" fill="#d97706" filter="url(#glow-orange-day)">
+          <animateMotion dur="3.5s" repeatCount="indefinite" begin="1.75s"><mpath href="#p-db-sql-day"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#94a3b8">
+          <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath href="#p-sql-pc-day"/></animateMotion>
+        </circle>
+        <circle r="3" fill="#94a3b8">
+          <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath href="#p-sql-pc-day"/></animateMotion>
+        </circle>
+
+      </svg>
+      </div><!-- /.arch-day -->
     </div>
 
     <!-- Data flow detail table -->
@@ -410,7 +1214,7 @@
 <section id="data">
   <div class="container">
     <div class="section-header fade-in">
-      <h2 data-i18n="data.title">Datos Capturados</h2>
+      <h2 data-i18n="data.title">Datos capturados</h2>
       <p data-i18n="data.subtitle">Tres fuentes de datos oficiales de Renfe (licencia CC BY 4.0), filtradas geográficamente y almacenadas con esquema optimizado</p>
     </div>
 
@@ -513,7 +1317,7 @@
 <section id="optimization">
   <div class="container">
     <div class="section-header fade-in">
-      <h2 data-i18n="opt.title">Optimización de Consumo Azure SQL</h2>
+      <h2 data-i18n="opt.title">Optimización de consumo Azure SQL</h2>
       <p data-i18n="opt.subtitle">La evolución del sistema desde conexión persistente hasta batch de 4 horas redujo el consumo un 95%</p>
     </div>
 
@@ -548,7 +1352,7 @@
             <td><span class="version-badge v2">V2</span></td>
             <td data-i18n="opt.v2.strategy">1 script, flush cada 20 min — BD activa 24h sin auto-pause</td>
             <td style="font-family:var(--font-mono)">~850.000</td>
-            <td><span class="status-bad">✗ Peor que V1</span></td>
+            <td><span class="status-bad">✗ BBDD siempre activa</span></td>
           </tr>
           <tr>
             <td><span class="version-badge v3">V3</span></td>
@@ -601,7 +1405,7 @@
 <section id="speed">
   <div class="container">
     <div class="section-header fade-in">
-      <h2 data-i18n="speed.title">Cálculo de Velocidad y Bearing</h2>
+      <h2 data-i18n="speed.title">Cálculo de velocidad y bearing</h2>
       <p data-i18n="speed.subtitle">Renfe no publica velocidad ni rumbo en sus feeds. El sistema los calcula derivándolos de snapshots consecutivos mediante Haversine</p>
     </div>
 
@@ -810,8 +1614,8 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
 <section id="schema">
   <div class="container">
     <div class="section-header fade-in">
-      <h2 data-i18n="schema.title">Esquema de Datos</h2>
-      <p data-i18n="schema.subtitle">Todas las tablas se crean automáticamente al arrancar el script. 8 tablas en total.</p>
+      <h2 data-i18n="schema.title">Esquema de datos</h2>
+      <p data-i18n="schema.subtitle">Todas las tablas se crean automáticamente al arrancar el script. Ocho tablas en total.</p>
     </div>
 
     <div class="schema-tabs fade-in">
@@ -939,7 +1743,7 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
 <section id="setup">
   <div class="container">
     <div class="section-header fade-in">
-      <h2 data-i18n="setup.title">Puesta en Marcha</h2>
+      <h2 data-i18n="setup.title">Puesta en marcha</h2>
       <p data-i18n="setup.subtitle">Desde cero hasta capturando datos en producción en 9 pasos</p>
     </div>
 
@@ -1075,7 +1879,7 @@ sudo chmod 644 /opt/renfe/.env   # 644, NO 600</code></pre>
 <section id="query">
   <div class="container">
     <div class="section-header fade-in">
-      <h2 data-i18n="query.title">Consultar los Datos</h2>
+      <h2 data-i18n="query.title">Consultar los datos</h2>
       <p data-i18n="query.subtitle">Los datos son accesibles desde cualquier cliente SQL o directamente con Python/pandas</p>
     </div>
 
@@ -1254,6 +2058,84 @@ print(df_ast.groupby("line")["speed"].describe())</code></pre>
           <span>Recopilando datos · Llegada sin confirmar</span>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Glossary ────────────────────────────────────────────────────────────── -->
+<section id="glossary">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2><i class="fas fa-book-open" style="color:var(--accent);margin-right:12px"></i>Glosario ferroviario &amp; técnico</h2>
+      <p>Definiciones de los términos técnicos que aparecen en este proyecto, ordenados alfabéticamente.</p>
+    </div>
+    <div class="gloss-grid fade-in">
+
+      <div class="gloss-letter-sep">A</div>
+      <div class="gloss-entry" id="gloss-alert"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Alert / Alerta</dt><dd>Mensaje del feed GTFS-RT que notifica incidencias en el servicio: huelgas, obras, cancelaciones o cambios de andén. Se publica en <code>alerts.json</code>.</dd></div>
+      <div class="gloss-entry" id="gloss-autopause"><span class="gloss-cat cat-azure">Azure</span><dt>Auto-pause</dt><dd>Función de Azure SQL Serverless que detiene automáticamente el cómputo (0 vCores) tras un período de inactividad, ahorrando coste. Al llegar la siguiente conexión, la base de datos se reactiva en segundos.</dd></div>
+      <div class="gloss-entry" id="gloss-ave"><span class="gloss-cat cat-train">Ferroviario</span><dt>AVE</dt><dd>Alta Velocidad Española. Red de trenes de alta velocidad de Renfe que circulan a más de 200 km/h. Comparte infraestructura con Alvia e Intercity en la categoría de Largo Recorrido.</dd></div>
+
+      <div class="gloss-letter-sep">B</div>
+      <div class="gloss-entry" id="gloss-batch"><span class="gloss-cat cat-tech">Técnico</span><dt>Batch</dt><dd>Estrategia que acumula datos en memoria RAM durante un período (aquí 4 horas) y los escribe todos de una vez en la base de datos, en lugar de hacerlo registro a registro en cada captura.</dd></div>
+      <div class="gloss-entry" id="gloss-bearing"><span class="gloss-cat cat-geo">Geografía</span><dt>Bearing (rumbo)</dt><dd>Ángulo de dirección de movimiento medido en grados respecto al norte geográfico (0° = Norte, 90° = Este, 180° = Sur, 270° = Oeste). Se calcula a partir de dos coordenadas GPS consecutivas usando trigonometría esférica.</dd></div>
+      <div class="gloss-entry" id="gloss-bbox"><span class="gloss-cat cat-geo">Geografía</span><dt>Bounding box (BBox)</dt><dd>Rectángulo geográfico definido por cuatro coordenadas (latitud mínima/máxima, longitud mínima/máxima) que delimita una zona. Se usa para filtrar solo los trenes dentro de esa área geográfica.</dd></div>
+
+      <div class="gloss-letter-sep">C</div>
+      <div class="gloss-entry" id="gloss-cercanias"><span class="gloss-cat cat-train">Ferroviario</span><dt>Cercanías</dt><dd>Red de trenes de corta distancia operada por Renfe que conecta núcleos urbanos con sus áreas metropolitanas. Las líneas se identifican con C seguido de un número (C1, C2…). Este proyecto captura datos de Asturias y Cádiz.</dd></div>
+
+      <div class="gloss-letter-sep">D</div>
+      <div class="gloss-entry" id="gloss-ddl"><span class="gloss-cat cat-tech">Técnico</span><dt>DDL</dt><dd>Data Definition Language. Subconjunto de SQL que define la estructura de la base de datos: <code>CREATE TABLE</code>, <code>ALTER TABLE</code>, <code>DROP TABLE</code>. Se ejecuta al arrancar si las tablas no existen aún.</dd></div>
+
+      <div class="gloss-letter-sep">E</div>
+      <div class="gloss-entry" id="gloss-entity"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Entity</dt><dd>Elemento del array <code>entity[]</code> en un feed GTFS-RT. Cada entidad representa un vehículo, un viaje o una alerta, e incluye un identificador único (<code>id</code>) y los datos asociados en tiempo real.</dd></div>
+
+      <div class="gloss-letter-sep">F</div>
+      <div class="gloss-entry" id="gloss-feed"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Feed</dt><dd>Flujo de datos publicado de forma periódica por un servicio. El feed de Renfe se actualiza cada ~20 segundos y contiene posiciones de vehículos, actualizaciones de viajes y alertas de servicio.</dd></div>
+      <div class="gloss-entry" id="gloss-flush"><span class="gloss-cat cat-tech">Técnico</span><dt>Flush</dt><dd>Operación de volcado: escribir en la base de datos todos los datos acumulados en memoria y limpiar el buffer. En este proyecto ocurre cada 4 horas, abriendo una única conexión SQL, insertando en lote y cerrando la conexión.</dd></div>
+
+      <div class="gloss-letter-sep">G</div>
+      <div class="gloss-entry" id="gloss-gtfs"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>GTFS</dt><dd>General Transit Feed Specification. Estándar abierto creado por Google para publicar horarios y rutas de transporte público en un formato común. Lo usan miles de operadores de transporte en todo el mundo.</dd></div>
+      <div class="gloss-entry" id="gloss-gtfsrt"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>GTFS-RT (Realtime)</dt><dd>Extensión de GTFS para datos en tiempo real: posiciones GPS de vehículos, retrasos en paradas y alertas. Renfe lo publica en JSON en <code>gtfsrt.renfe.com</code> actualizándose cada ~20 segundos.</dd></div>
+
+      <div class="gloss-letter-sep">H</div>
+      <div class="gloss-entry" id="gloss-haversine"><span class="gloss-cat cat-geo">Geografía</span><dt>Haversine</dt><dd>Fórmula matemática que calcula la distancia entre dos puntos sobre la superficie esférica de la Tierra a partir de sus coordenadas GPS. Se usa para calcular la distancia recorrida entre dos capturas y derivar la velocidad del tren.</dd></div>
+      <div class="gloss-entry" id="gloss-http"><span class="gloss-cat cat-tech">Técnico</span><dt>HTTP GET</dt><dd>Método del protocolo HTTP para solicitar datos a un servidor web. El script Python ejecuta un <code>requests.get(url)</code> cada 30 segundos para descargar los feeds JSON de Renfe.</dd></div>
+
+      <div class="gloss-letter-sep">J</div>
+      <div class="gloss-entry" id="gloss-json"><span class="gloss-cat cat-tech">Técnico</span><dt>JSON</dt><dd>JavaScript Object Notation. Formato de texto ligero para intercambiar datos estructurados mediante pares clave–valor y listas. Renfe publica sus feeds GTFS-RT en JSON en lugar del formato binario Protobuf habitual.</dd></div>
+
+      <div class="gloss-letter-sep">L</div>
+      <div class="gloss-entry" id="gloss-lr"><span class="gloss-cat cat-train">Ferroviario</span><dt>Largo Recorrido</dt><dd>Categoría de trenes de Renfe para trayectos de media y larga distancia (AVE, Alvia, Intercity, Talgo…). Sus datos se publican en <code>tiempo-real.largorecorrido.renfe.com</code> cada ~15 segundos.</dd></div>
+      <div class="gloss-entry" id="gloss-latencia"><span class="gloss-cat cat-tech">Técnico</span><dt>Latencia GPS</dt><dd>Tiempo entre que el tren se mueve y que ese cambio aparece en los datos capturados. En cercanías puede llegar a 2–10 minutos por la baja frecuencia de actualización GPS que publica Renfe.</dd></div>
+
+      <div class="gloss-letter-sep">O</div>
+      <div class="gloss-entry" id="gloss-odbc"><span class="gloss-cat cat-tech">Técnico</span><dt>ODBC</dt><dd>Open Database Connectivity. Interfaz estándar que permite a aplicaciones conectarse a bases de datos independientemente del fabricante. Este proyecto usa el <em>ODBC Driver 18 for SQL Server</em> de Microsoft en la VM Ubuntu.</dd></div>
+
+      <div class="gloss-letter-sep">P</div>
+      <div class="gloss-entry" id="gloss-pantografo"><span class="gloss-cat cat-train">Ferroviario</span><dt>Pantógrafo</dt><dd>Dispositivo articulado en el techo del tren que mantiene contacto con la catenaria (el cable eléctrico aéreo) para captar la corriente que alimenta los motores. Elemento distintivo de los trenes eléctricos de alta velocidad.</dd></div>
+      <div class="gloss-entry" id="gloss-parallax"><span class="gloss-cat cat-tech">Técnico</span><dt>Parallax (efecto)</dt><dd>Técnica visual donde distintas capas de una escena se desplazan a velocidades distintas, creando sensación de profundidad. Cuanto más cercana parece la capa, más rápido se mueve. Usado en la animación del tren de la cabecera.</dd></div>
+      <div class="gloss-entry" id="gloss-pip"><span class="gloss-cat cat-tech">Técnico</span><dt>pip</dt><dd>Gestor de paquetes oficial de Python. Instala librerías desde PyPI con <code>pip install nombre</code>. En este proyecto se usa para instalar <code>requests</code> y <code>pyodbc</code> en la VM.</dd></div>
+      <div class="gloss-entry" id="gloss-pyodbc"><span class="gloss-cat cat-tech">Técnico</span><dt>pyodbc</dt><dd>Librería Python que permite conectarse y ejecutar consultas SQL en bases de datos mediante ODBC. Es el puente entre los scripts Python y Azure SQL Database en este proyecto.</dd></div>
+
+      <div class="gloss-letter-sep">R</div>
+      <div class="gloss-entry" id="gloss-ram"><span class="gloss-cat cat-tech">Técnico</span><dt>RAM</dt><dd>Random Access Memory. Memoria de acceso rápido y volátil. Los datos capturados se acumulan en RAM durante 4 horas para minimizar las conexiones a Azure SQL y reducir el consumo de vCore-segundos del tier gratuito.</dd></div>
+
+      <div class="gloss-letter-sep">S</div>
+      <div class="gloss-entry" id="gloss-scraping"><span class="gloss-cat cat-tech">Técnico</span><dt>Scraping / Scraper</dt><dd>Técnica de extracción automatizada de datos de fuentes externas (APIs o webs) mediante código. Un scraper hace peticiones periódicas, analiza la respuesta y guarda los datos relevantes. Aquí se capturan feeds JSON de Renfe cada 30 segundos.</dd></div>
+      <div class="gloss-entry" id="gloss-serverless"><span class="gloss-cat cat-azure">Azure</span><dt>Serverless</dt><dd>Modelo cloud donde el cómputo escala automáticamente y se detiene (a 0) cuando no hay actividad. Azure SQL Serverless cobra solo los vCore-segundos realmente consumidos, ideal para cargas de trabajo intermitentes.</dd></div>
+      <div class="gloss-entry" id="gloss-snapshot"><span class="gloss-cat cat-tech">Técnico</span><dt>Snapshot</dt><dd>Captura puntual del estado de un dato en un instante concreto. Cada 30 segundos se genera un snapshot (fila en la tabla) con la posición, velocidad estimada y timestamp de cada tren capturado.</dd></div>
+      <div class="gloss-entry" id="gloss-ssh"><span class="gloss-cat cat-tech">Técnico</span><dt>SSH</dt><dd>Secure Shell. Protocolo cifrado para conectarse de forma segura a un servidor remoto desde la terminal. Se accede a la VM de Azure con una clave privada (<code>.pem</code>) en lugar de contraseña.</dd></div>
+      <div class="gloss-entry" id="gloss-systemd"><span class="gloss-cat cat-tech">Técnico</span><dt>systemd</dt><dd>Sistema de gestión de servicios de Linux que arranca, supervisa y reinicia procesos automáticamente. Los scripts de captura corren como servicios systemd, garantizando que se inicien con la VM y se relancen ante cualquier fallo.</dd></div>
+
+      <div class="gloss-letter-sep">T</div>
+      <div class="gloss-entry" id="gloss-tripid"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Trip ID</dt><dd>Identificador único de un viaje programado en el sistema GTFS. Combina número de tren, línea y fecha (p. ej. <code>3015L23533C1</code>). Permite enlazar la posición GPS de un vehículo con su itinerario de paradas previstas.</dd></div>
+      <div class="gloss-entry" id="gloss-tripupdate"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Trip Update</dt><dd>Mensaje del feed GTFS-RT con el estado en tiempo real de un viaje: retrasos de llegada y salida en cada parada, y cancelaciones parciales o totales. Se publica en <code>trip_updates.json</code>.</dd></div>
+
+      <div class="gloss-letter-sep">V</div>
+      <div class="gloss-entry" id="gloss-vcore"><span class="gloss-cat cat-azure">Azure</span><dt>vCore</dt><dd>Núcleo virtual (Virtual Core). Unidad de cómputo de Azure SQL. Se cobra en vCore-segundos: vCores asignados × tiempo activo. El tier gratuito incluye 100.000 vCore-s/mes (~28 horas de cómputo a 1 vCore).</dd></div>
+      <div class="gloss-entry" id="gloss-vm"><span class="gloss-cat cat-azure">Azure</span><dt>VM (Virtual Machine)</dt><dd>Máquina virtual: ordenador simulado que corre sobre hardware físico en la nube. Este proyecto usa una <em>Standard B1s</em> de Azure (1 vCPU, 1 GB RAM, Ubuntu 22.04) como servidor de captura permanente de datos.</dd></div>
+
     </div>
   </div>
 </section>
