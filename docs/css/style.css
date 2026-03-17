@@ -474,8 +474,7 @@ body.day-mode .code-header            { background: #e6e9ed; }
 /* ── Code blocks ─────────────────────────────────────────────────────────── */
 .code-block {
   position: relative; background: var(--bg-secondary); border: 1px solid var(--border);
-  border-radius: var(--radius); overflow-x: auto; overflow-y: hidden; margin: 16px 0;
-  max-width: 100%;
+  border-radius: var(--radius); overflow: hidden; margin: 16px 0; max-width: 100%;
 }
 .code-header {
   display: flex; justify-content: space-between; align-items: center;
@@ -489,7 +488,7 @@ body.day-mode .code-header            { background: #e6e9ed; }
 }
 .copy-btn:hover { border-color: var(--accent-2); color: var(--accent-2); }
 .copy-btn.copied { border-color: var(--accent); color: var(--accent); }
-.code-block pre { margin: 0 !important; border-radius: 0 !important; background: transparent !important; min-width: 0; }
+.code-block pre { margin: 0 !important; border-radius: 0 !important; background: transparent !important; max-width: 100%; overflow-x: auto; white-space: pre; }
 .code-block code { font-size: 0.85rem !important; }
 
 /* ── Schema ──────────────────────────────────────────────────────────────── */
