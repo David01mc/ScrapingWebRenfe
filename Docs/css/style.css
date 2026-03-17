@@ -652,6 +652,21 @@ body.day-mode .code-header            { background: #e6e9ed; }
 }
 
 /* ── Glossary ────────────────────────────────────────────────────────────── */
+/* Inline glossary links throughout the page */
+a.gloss-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color .15s;
+}
+a.gloss-link:hover {
+  color: var(--accent);
+  text-decoration-style: solid;
+}
+
 #glossary { background: var(--bg-primary); }
 
 .gloss-grid {

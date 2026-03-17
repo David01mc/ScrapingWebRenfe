@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Renfe Real-Time Scraper — Sistema de captura de trenes</title>
-  <meta name="description" content="Sistema autónomo de scraping en tiempo real para datos de trenes Renfe. Captura posiciones GPS, retrasos y alertas. Almacena en Azure SQL Database." />
+  <meta name="description" content="Sistema autónomo de <a href="#gloss-scraping" class="gloss-link">scraping</a> en tiempo real para datos de trenes Renfe. Captura posiciones GPS, retrasos y alertas. Almacena en Azure SQL Database." />
   <meta property="og:title" content="Renfe Real-Time Train Scraper" />
   <meta property="og:description" content="Open source real-time train data capture system for Renfe (Spain). GPS positions, delays, alerts. Azure SQL + Python." />
   <meta property="og:image" content="https://opengraph.githubassets.com/1/David01mc/ScrapingWebRenfe" />
@@ -729,7 +729,7 @@
       </div>
       <div class="stat-card fade-in">
         <div class="stat-number counter" data-target="12000" data-suffix="+">0</div>
-        <div class="stat-label" data-i18n="stats.rows.label">filas por flush</div>
+        <div class="stat-label" data-i18n="stats.rows.label">filas por <a href="#gloss-flush" class="gloss-link">flush</a></div>
       </div>
       <div class="stat-card fade-in">
         <div class="stat-number counter" data-target="3">0</div>
@@ -751,19 +751,19 @@
         <div class="step-number">1</div>
         <div class="step-icon"><i class="fas fa-satellite-dish"></i></div>
         <h3 data-i18n="how.step1.title">Captura</h3>
-        <p data-i18n="how.step1.desc">Peticiones HTTP cada 30 segundos a los feeds oficiales GTFS-RT de Renfe. Posiciones GPS, retrasos por parada y alertas de servicio.</p>
+        <p data-i18n="how.step1.desc">Peticiones HTTP cada 30 segundos a los feeds oficiales <a href="#gloss-gtfsrt" class="gloss-link">GTFS-RT</a> de Renfe. Posiciones GPS, retrasos por parada y alertas de servicio.</p>
       </div>
       <div class="step-card fade-in">
         <div class="step-number">2</div>
         <div class="step-icon"><i class="fas fa-gears"></i></div>
         <h3 data-i18n="how.step2.title">Procesa</h3>
-        <p data-i18n="how.step2.desc">Filtrado geográfico por bounding box, cálculo de velocidad y bearing mediante Haversine. Todo en memoria RAM sin tocar la base de datos.</p>
+        <p data-i18n="how.step2.desc">Filtrado geográfico por <a href="#gloss-bbox" class="gloss-link">bounding box</a>, cálculo de velocidad y <a href="#gloss-bearing" class="gloss-link">bearing</a> mediante <a href="#gloss-haversine" class="gloss-link">Haversine</a>. Todo en memoria <a href="#gloss-ram" class="gloss-link">RAM</a> sin tocar la base de datos.</p>
       </div>
       <div class="step-card fade-in">
         <div class="step-number">3</div>
         <div class="step-icon"><i class="fas fa-database"></i></div>
         <h3 data-i18n="how.step3.title">Almacena</h3>
-        <p data-i18n="how.step3.desc">Flush a Azure SQL cada 4 horas con una única conexión. La base de datos entra en auto-pause entre flushes, minimizando el consumo del tier gratuito.</p>
+        <p data-i18n="how.step3.desc"><a href="#gloss-flush" class="gloss-link">Flush</a> a Azure SQL cada 4 horas con una única conexión. La base de datos entra en <a href="#gloss-autopause" class="gloss-link">auto-pause</a> entre flushes, minimizando el consumo del tier gratuito.</p>
       </div>
     </div>
   </div>
@@ -774,7 +774,7 @@
   <div class="container">
     <div class="section-header fade-in">
       <h2 data-i18n="arch.title">Arquitectura del sistema</h2>
-      <p data-i18n="arch.subtitle">Un script unificado gestiona las tres fuentes de datos y optimiza el consumo de Azure SQL mediante batching en memoria</p>
+      <p data-i18n="arch.subtitle">Un script unificado gestiona las tres fuentes de datos y optimiza el consumo de Azure SQL mediante <a href="#gloss-batch" class="gloss-link">batching</a> en memoria</p>
     </div>
 
     <!-- Custom SVG Architecture Diagram with animated data flow -->
@@ -1227,7 +1227,7 @@
           <span class="data-card-badge">C1 · C2 · C3 · C4</span>
         </div>
         <div class="data-card-body">
-          <p data-i18n="data.asturias.desc">Red de cercanías del norte de España. Filtrado por bounding box geográfico.</p>
+          <p data-i18n="data.asturias.desc">Red de cercanías del norte de España. Filtrado por <a href="#gloss-bbox" class="gloss-link">bounding box</a> geográfico.</p>
           <div class="data-meta">
             <div class="meta-item"><span class="meta-icon"><i class="fas fa-location-crosshairs"></i></span><span data-i18n="data.asturias.bbox">Zona: lat 43.0–43.7 / lon -7.0–-4.5</span></div>
             <div class="meta-item"><span class="meta-icon"><i class="fas fa-layer-group"></i></span><span data-i18n="data.asturias.tables">3 tablas: snapshots, trip_updates, alerts</span></div>
@@ -1257,7 +1257,7 @@
           <span class="data-card-badge">C1 · C2</span>
         </div>
         <div class="data-card-body">
-          <p data-i18n="data.cadiz.desc">Red de cercanías de la Bahía de Cádiz. Filtrado por bounding box geográfico.</p>
+          <p data-i18n="data.cadiz.desc">Red de cercanías de la Bahía de Cádiz. Filtrado por <a href="#gloss-bbox" class="gloss-link">bounding box</a> geográfico.</p>
           <div class="data-meta">
             <div class="meta-item"><span class="meta-icon"><i class="fas fa-location-crosshairs"></i></span><span data-i18n="data.cadiz.bbox">Zona: lat 36.3–37.5 / lon -6.5–-5.7</span></div>
             <div class="meta-item"><span class="meta-icon"><i class="fas fa-layer-group"></i></span><span data-i18n="data.cadiz.tables">3 tablas: snapshots, trip_updates, alerts</span></div>
@@ -1323,11 +1323,11 @@
 
     <!-- Chart -->
     <div class="chart-container fade-in">
-      <p class="chart-title" data-i18n="opt.chart.title">Consumo mensual por versión (vCore-segundos) — escala logarítmica</p>
+      <p class="chart-title" data-i18n="opt.chart.title">Consumo mensual por versión (<a href="#gloss-vcore" class="gloss-link">vCore</a>-segundos) — escala logarítmica</p>
       <div class="chart-wrapper">
         <canvas id="vcoreChart"></canvas>
       </div>
-      <p class="opt-limit-note" data-i18n="opt.limit">Límite gratuito: 100.000 vCore-s/mes</p>
+      <p class="opt-limit-note" data-i18n="opt.limit">Límite gratuito: 100.000 <a href="#gloss-vcore" class="gloss-link">vCore</a>-s/mes</p>
     </div>
 
     <!-- Comparison table -->
@@ -1350,19 +1350,19 @@
           </tr>
           <tr>
             <td><span class="version-badge v2">V2</span></td>
-            <td data-i18n="opt.v2.strategy">1 script, flush cada 20 min — BD activa 24h sin auto-pause</td>
+            <td data-i18n="opt.v2.strategy">1 script, <a href="#gloss-flush" class="gloss-link">flush</a> cada 20 min — BD activa 24h sin <a href="#gloss-autopause" class="gloss-link">auto-pause</a></td>
             <td style="font-family:var(--font-mono)">~850.000</td>
             <td><span class="status-bad">✗ BBDD siempre activa</span></td>
           </tr>
           <tr>
             <td><span class="version-badge v3">V3</span></td>
-            <td data-i18n="opt.v3.strategy">1 script, flush 2h + pausa nocturna</td>
+            <td data-i18n="opt.v3.strategy">1 script, <a href="#gloss-flush" class="gloss-link">flush</a> 2h + pausa nocturna</td>
             <td style="font-family:var(--font-mono)">~80.000</td>
             <td><span class="status-warn">⚠ Límite cercano</span></td>
           </tr>
           <tr>
             <td><span class="version-badge v4">V4</span></td>
-            <td data-i18n="opt.v4.strategy">1 script, flush 4h + pausa nocturna</td>
+            <td data-i18n="opt.v4.strategy">1 script, <a href="#gloss-flush" class="gloss-link">flush</a> 4h + pausa nocturna</td>
             <td style="font-family:var(--font-mono)">~45.000</td>
             <td><span class="status-ok">✓ PRODUCCIÓN</span></td>
           </tr>
@@ -1377,7 +1377,7 @@
         <div class="cycle-steps">
           <div class="cycle-step active">
             <div><i class="fas fa-bolt"></i></div>
-            <div data-i18n="opt.cycle.flush">Flush (~60s activa)</div>
+            <div data-i18n="opt.cycle.flush"><a href="#gloss-flush" class="gloss-link">Flush</a> (~60s activa)</div>
           </div>
           <div class="cycle-step cooling">
             <div><i class="fas fa-temperature-half"></i></div>
@@ -1385,7 +1385,7 @@
           </div>
           <div class="cycle-step pause">
             <div><i class="fas fa-bed"></i></div>
-            <div data-i18n="opt.cycle.pause">Auto-pause (~3h)</div>
+            <div data-i18n="opt.cycle.pause"><a href="#gloss-autopause" class="gloss-link">Auto-pause</a> (~3h)</div>
           </div>
         </div>
       </div>
@@ -1405,8 +1405,8 @@
 <section id="speed">
   <div class="container">
     <div class="section-header fade-in">
-      <h2 data-i18n="speed.title">Cálculo de velocidad y bearing</h2>
-      <p data-i18n="speed.subtitle">Renfe no publica velocidad ni rumbo en sus feeds. El sistema los calcula derivándolos de snapshots consecutivos mediante Haversine</p>
+      <h2 data-i18n="speed.title">Cálculo de velocidad y <a href="#gloss-bearing" class="gloss-link">bearing</a></h2>
+      <p data-i18n="speed.subtitle">Renfe no publica velocidad ni rumbo en sus feeds. El sistema los calcula derivándolos de <a href="#gloss-snapshot" class="gloss-link">snapshots</a> consecutivos mediante <a href="#gloss-haversine" class="gloss-link">Haversine</a></p>
     </div>
 
     <div class="speed-grid fade-in">
@@ -1811,7 +1811,7 @@ icacls "deploy\tu-clave.pem" /grant:r "${env:USERNAME}:(R)"</code></pre>
         <div class="setup-step-num">5</div>
         <div class="setup-step-content">
           <h3 data-i18n="setup.step5.title">Ejecutar setup.sh</h3>
-          <p data-i18n="setup.step5.desc">Instala Python, ODBC Driver 18, dependencias y crea el servicio systemd.</p>
+          <p data-i18n="setup.step5.desc">Instala Python, ODBC Driver 18, dependencias y crea el servicio <a href="#gloss-systemd" class="gloss-link">systemd</a>.</p>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn"><i class="fas fa-copy"></i></button></div>
             <pre><code class="language-bash">sed -i 's/\r//' ~/setup.sh   # Necesario si subido desde Windows
@@ -2075,6 +2075,7 @@ print(df_ast.groupby("line")["speed"].describe())</code></pre>
       <div class="gloss-entry" id="gloss-alert"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Alert / Alerta</dt><dd>Mensaje del feed GTFS-RT que notifica incidencias en el servicio: huelgas, obras, cancelaciones o cambios de andén. Se publica en <code>alerts.json</code>.</dd></div>
       <div class="gloss-entry" id="gloss-autopause"><span class="gloss-cat cat-azure">Azure</span><dt>Auto-pause</dt><dd>Función de Azure SQL Serverless que detiene automáticamente el cómputo (0 vCores) tras un período de inactividad, ahorrando coste. Al llegar la siguiente conexión, la base de datos se reactiva en segundos.</dd></div>
       <div class="gloss-entry" id="gloss-ave"><span class="gloss-cat cat-train">Ferroviario</span><dt>AVE</dt><dd>Alta Velocidad Española. Red de trenes de alta velocidad de Renfe que circulan a más de 200 km/h. Comparte infraestructura con Alvia e Intercity en la categoría de Largo Recorrido.</dd></div>
+      <div class="gloss-entry" id="gloss-azure"><span class="gloss-cat cat-azure">Azure</span><dt>Azure (Microsoft Azure)</dt><dd>Plataforma de servicios en la nube de Microsoft. Este proyecto usa dos de sus servicios: <em>Azure Virtual Machine</em> (una VM Linux donde corren los scripts de captura) y <em>Azure SQL Database</em> (la base de datos donde se almacenan los datos de los trenes). Ambos forman parte del tier gratuito o de bajo coste para proyectos académicos.</dd></div>
 
       <div class="gloss-letter-sep">B</div>
       <div class="gloss-entry" id="gloss-batch"><span class="gloss-cat cat-tech">Técnico</span><dt>Batch</dt><dd>Estrategia que acumula datos en memoria RAM durante un período (aquí 4 horas) y los escribe todos de una vez en la base de datos, en lugar de hacerlo registro a registro en cada captura.</dd></div>
