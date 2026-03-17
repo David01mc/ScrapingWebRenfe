@@ -34,7 +34,7 @@ Para reducir al máximo el consumo de vCore-segundos del tier gratuito de Azure 
 | Optimización | Detalle |
 |---|---|
 | **Script unificado** | Un solo proceso (`renfe_capture.py`) gestiona las 3 fuentes — 1 conexión por flush en lugar de 3 |
-| **Flush cada 2 horas** | 240 ciclos × 30s — la BD puede auto-pausarse entre flushes (auto-pause delay mínimo: 1 hora) |
+| **Flush cada 4 horas** | 480 ciclos × 30s — la BD puede auto-pausarse entre flushes (auto-pause delay mínimo: 1 hora) |
 | **Pausa nocturna** | Sin capturas entre las 23:00 y las 06:00 UTC — trenes sin servicio de madrugada |
 | **Itinerarios sin duplicados** | El itinerario de cada tren se guarda una sola vez por día (~90% menos filas en `train_itineraries`) |
 | **Caché en memoria** | Velocidad y bearing calculados sin consultar la BD — los cachés viven en RAM |
@@ -100,32 +100,38 @@ Si el script conecta a la BD cada pocos minutos, el timer de auto-pause se reset
  80k ┤╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲
      │                                                            ~30k/mes
      │
-     │  V3 — batch 2 horas + pausa nocturna (actual)             ← ACTUAL
+     │  V3 — batch 2 horas + pausa nocturna
+ 80k ┤╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲
+     │                                                            ~80k/mes
+     │
+     │  V4 — batch 4 horas + pausa nocturna (actual)             ← ACTUAL
  80k ┤────────────────────────────────────────────────────────────────────
-     │                                                             ~8k/mes
+     │                                                             ~45k/mes
   0k └──────────────────────────────────────────────────────────────────→
      día 1                    día 15                           día 30
 ```
 
-### ¿Por qué el flush cada 2 horas?
+### ¿Por qué el flush cada 4 horas?
 
-Azure SQL tiene un **auto-pause delay mínimo configurable de 1 hora**. Con flush cada 2 horas:
+Azure SQL tiene un **auto-pause delay mínimo configurable de 1 hora**. Con flush cada 4 horas:
 
 1. A las 0 min → flush (BD activa ~60 s, incluyendo reanudación)
-2. De 1 min a ~60 min → BD entra en auto-pause (0 vCore-s)
-3. De 60 min a 120 min → BD sigue pausada
-4. A los 120 min → siguiente flush (vuelve a activarse ~60 s)
+2. De 1 min a ~60 min → BD se enfría y entra en auto-pause (0 vCore-s)
+3. De 60 min a 240 min → BD sigue pausada (~3 horas sin consumo)
+4. A los 240 min → siguiente flush (vuelve a activarse ~60 s)
 
 ```
 Consumo real por flush:
-  0,5 vCores × 60 s (activación + insert) = 30 vCore-s por flush
+  ~750 vCore-s (activación + insert + período de enfriamiento)
 
-Al día (17 h activas, flush cada 2 h):
-  ~9 flushes × 30 vCore-s = 270 vCore-s/día
+Al día (17 h activas, flush cada 4 h):
+  ~4 flushes × 750 vCore-s = ~3.000 vCore-s/día
 
 Al mes:
-  270 × 30 = ~8.100 vCore-s/mes  →  8% del límite gratuito
+  3.000 × 30 = ~90.000 vCore-s/mes  →  90% del límite gratuito
 ```
+
+> Con 2 horas de flush el consumo era ~80.000 vCore-s/mes (datos reales medidos). Pasando a 4 horas se reduce a ~45.000 vCore-s/mes al duplicar el tiempo de auto-pause entre conexiones.
 
 ### Resumen comparativo
 
@@ -133,7 +139,8 @@ Al mes:
 |---|---|---|---|
 | V1 original | 3 scripts, conexión persistente | ~918.000 | < 2 días |
 | V2 batch 20 min | 1 script, flush cada 20 min | ~30.000 | ~3 meses |
-| **V3 actual** | **1 script, flush cada 2 h + pausa nocturna** | **~8.100** | **~12 meses** |
+| V3 batch 2 horas | 1 script, flush cada 2 h + pausa nocturna | ~80.000 | ~1 mes |
+| **V4 actual** | **1 script, flush cada 4 h + pausa nocturna** | **~45.000** | **~2 meses** |
 | Límite gratuito | — | 100.000 | — |
 
 ### ¿Las velocidades se ven afectadas?
@@ -512,7 +519,7 @@ Captura cada 30s | Flush cada 7200s | Pausa nocturna 23:00–06:00 UTC
   → Flush BD | AST: 1600pos/2400upd | CDZ: 1000pos/1600upd | LR: 600snap/180itin | total 7380 filas
 ```
 
-El flush aparece cada 2 horas. Los itinerarios (`itin`) solo aparecen la primera vez que se ve cada tren en el día.
+El flush aparece cada 4 horas. Los itinerarios (`itin`) solo aparecen la primera vez que se ve cada tren en el día.
 
 ---
 
@@ -579,7 +586,7 @@ Un único servicio systemd gestiona las tres fuentes y arranca automáticamente 
 
 | Servicio | Script | Captura | Flush | Pausa nocturna |
 |---|---|---|---|---|
-| `renfe-capture` | `renfe_capture.py --loop 30 --flush-every 240` | 30s | 2 horas | 23:00–06:00 UTC |
+| `renfe-capture` | `renfe_capture.py --loop 30 --flush-every 480` | 30s | 4 horas | 23:00–06:00 UTC |
 
 ### Comandos útiles
 
@@ -623,11 +630,11 @@ tail -50 /opt/renfe/renfe-capture.log
 2026-03-16 21:02:15 INFO CAPTURA | AST 26pos/1upd  CDZ 5pos/4upd  LR 145snap/0itin  0.8s
 2026-03-16 21:02:45 INFO CAPTURA | AST 24pos/0upd  CDZ 4pos/3upd  LR 143snap/0itin  0.7s
 ...
-2026-03-16 23:02:15 INFO FLUSH | AST: 1820pos/70upd | CDZ: 350pos/280upd | LR: 10150snap/0itin | total 12670 filas
+2026-03-17 01:02:15 INFO FLUSH | AST: 1820pos/70upd | CDZ: 350pos/280upd | LR: 10150snap/0itin | total 12670 filas
 ```
 
 - **CAPTURA**: línea cada 30 segundos con el número de registros acumulados en el ciclo actual.
-- **FLUSH**: línea cada 2 horas con el total de filas insertadas en Azure SQL.
+- **FLUSH**: línea cada 4 horas con el total de filas insertadas en Azure SQL.
 - **WARNING**: captura con errores parciales (uno de los feeds falló, el resto continúa).
 - **ERROR**: error crítico que ha provocado el cierre del proceso.
 
@@ -733,4 +740,4 @@ Muestra: snapshots por línea, velocidad media/máxima, retrasos medios/máximos
 
 ---
 
-*Documentación actualizada el 2026-03-16*
+*Documentación actualizada el 2026-03-17*
