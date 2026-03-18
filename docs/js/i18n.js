@@ -97,6 +97,8 @@ const TRANSLATIONS = {
     'opt.cycle.pause': '<a href="#gloss-autopause" class="gloss-link">Auto-pause</a> (~3h)',
     'opt.night.title': 'Pausa nocturna automática',
     'opt.night.desc': 'Entre las 23:00 y 06:00 UTC no hay capturas ni conexiones. La base de datos permanece en auto-pause durante 7 horas, reduciendo el consumo mensual un 30% adicional.',
+    'opt.real.title': 'Datos reales — Azure Monitor (15–18 mar 2026)',
+    'opt.real.source': 'Fuente: Azure Monitor · Free amount remaining (Min) · SQLJoseDavid',
 
     // Speed
     'speed.title': 'Cálculo de Velocidad y <a href="#gloss-bearing" class="gloss-link">Bearing</a>',
@@ -281,6 +283,8 @@ const TRANSLATIONS = {
     'opt.cycle.pause': '<a href="#gloss-autopause" class="gloss-link">Auto-pause</a> (~3h)',
     'opt.night.title': 'Automatic night pause',
     'opt.night.desc': 'Between 23:00 and 06:00 UTC there are no captures or connections. The database stays auto-paused for 7 hours, reducing monthly consumption by an additional 30%.',
+    'opt.real.title': 'Real data — Azure Monitor (Mar 15–18, 2026)',
+    'opt.real.source': 'Source: Azure Monitor · Free amount remaining (Min) · SQLJoseDavid',
 
     // Speed
     'speed.title': 'Speed and <a href="#gloss-bearing" class="gloss-link">Bearing</a> Calculation',

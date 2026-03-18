@@ -164,6 +164,159 @@ const chartObserver = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.3 });
 
+// ── Real Azure Monitor consumption data (Mar 15–18, 2026) ────────────────────
+const CONSUMPTION_DATA = [
+  ['15/03 13:06',99501],['15/03 13:21',99416],['15/03 13:51',98924],
+  ['15/03 14:06',98832],['15/03 14:21',97803],['15/03 14:36',97768],
+  ['15/03 14:51',97203],['15/03 15:06',96539],['15/03 15:21',95974],
+  ['15/03 15:36',95320],['15/03 15:51',94743],['15/03 16:06',94089],
+  ['15/03 16:21',93520],['15/03 16:36',92858],['15/03 16:51',92289],
+  ['15/03 17:06',91630],['15/03 17:21',91067],['15/03 17:36',90402],
+  ['15/03 17:51',89840],['15/03 18:06',89179],['15/03 18:21',88610],
+  ['15/03 18:36',87966],['15/03 18:51',87389],['15/03 19:06',86721],
+  ['15/03 19:21',86153],['15/03 19:36',85505],['15/03 19:51',84929],
+  ['15/03 20:06',84270],['15/03 20:21',83710],['15/03 20:36',83042],
+  ['15/03 20:51',82482],['15/03 21:06',81824],['15/03 21:21',81255],
+  ['15/03 21:36',80594],['15/03 21:51',80019],['15/03 22:06',79368],
+  ['15/03 22:21',78806],['15/03 22:36',78138],['15/03 22:51',77579],
+  ['15/03 23:06',77162],['15/03 23:21',76662],['15/03 23:36',76331],
+  ['15/03 23:51',75848],['16/03 00:06',75436],
+  // ↑ Night pause 00:06–07:21 (~581 vCore-s consumed)
+  ['16/03 07:21',74855],['16/03 07:51',74523],['16/03 08:06',74188],
+  ['16/03 08:21',73288],['16/03 08:36',72963],['16/03 08:51',72564],
+  ['16/03 09:06',71983],['16/03 09:21',71659],['16/03 09:36',71321],
+  ['16/03 09:51',70833],['16/03 10:06',70417],['16/03 10:21',70099],
+  ['16/03 10:51',69680],['16/03 11:06',69109],['16/03 11:21',68782],
+  ['16/03 11:36',68447],['16/03 11:51',67959],['16/03 12:06',67553],
+  ['16/03 12:21',67216],['16/03 12:36',66803],['16/03 12:51',66232],
+  ['16/03 13:06',65907],['16/03 13:21',65576],['16/03 13:36',65095],
+  ['16/03 13:51',64686],['16/03 14:06',63941],['16/03 14:21',63368],
+  ['16/03 14:36',63037],['16/03 15:06',62220],['16/03 15:36',61813],
+  ['16/03 15:51',61062],['16/03 16:21',60247],['16/03 16:51',59343],
+  ['16/03 17:06',58926],['16/03 17:21',58603],['16/03 17:36',58191],
+  ['16/03 18:06',57276],['16/03 18:21',56936],['16/03 18:36',56440],
+  ['16/03 18:51',55708],['16/03 19:06',55299],['16/03 19:21',54807],
+  ['16/03 19:36',54319],['16/03 19:51',53746],['16/03 20:06',53172],
+  ['16/03 20:21',52757],['16/03 20:36',52423],['16/03 20:51',52013],
+  ['16/03 21:06',51529],['16/03 21:51',51367],['16/03 22:06',50948],
+  ['16/03 22:51',50537],
+  // ↑ Night pause 22:51–09:06 (~167 vCore-s consumed)
+  ['17/03 09:06',50370],['17/03 11:06',49881],['17/03 11:21',49796],
+  ['17/03 13:21',49433],['17/03 15:06',48973],['17/03 16:06',48564],
+  ['17/03 17:06',47992],['17/03 17:51',47750],['17/03 18:51',47421],
+  ['17/03 19:06',47340],['17/03 22:06',46848],['17/03 23:06',46683],
+  ['17/03 23:51',46267],['18/03 00:06',45779],
+  // ↑ Night pause 00:06–11:21 (~88 vCore-s consumed)
+  ['18/03 11:21',45691],['18/03 15:06',45438],['18/03 15:21',45114],
+];
+
+function buildRealConsumptionChart() {
+  const canvas = document.getElementById('realConsumptionChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  const labels = CONSUMPTION_DATA.map(d => d[0]);
+  const values = CONSUMPTION_DATA.map(d => d[1]);
+  const t = chartTheme();
+
+  // Gradient fill
+  const ctx2d = canvas.getContext('2d');
+  const grad = ctx2d.createLinearGradient(0, 0, 0, canvas.offsetHeight || 280);
+  grad.addColorStop(0, 'rgba(214,45,97,0.22)');
+  grad.addColorStop(1, 'rgba(214,45,97,0)');
+
+  const limitPlugin = {
+    id: 'realLimitLine',
+    afterDraw(chart) {
+      const th = chartTheme();
+      const { ctx, chartArea, scales } = chart;
+      const y = scales.y.getPixelForValue(100000);
+      if (y < chartArea.top) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([6, 3]);
+      ctx.strokeStyle = th.limitLine;
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(chartArea.left, y);
+      ctx.lineTo(chartArea.right, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = th.limitLine;
+      ctx.font = '11px monospace';
+      ctx.fillText('100k limit', chartArea.right - 78, y - 5);
+      ctx.restore();
+    }
+  };
+
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Free amount remaining',
+        data: values,
+        borderColor: '#d62d61',
+        backgroundColor: grad,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.25,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#d62d61',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1000, easing: 'easeOutQuart' },
+      scales: {
+        x: {
+          ticks: {
+            color: t.tick,
+            font: { family: 'monospace', size: 11 },
+            maxRotation: 0,
+            callback(value, index) {
+              const lbl = labels[index];
+              if (!lbl) return '';
+              const date = lbl.split(' ')[0];
+              if (index === 0) return date;
+              const prev = labels[index - 1];
+              return (prev && prev.split(' ')[0] !== date) ? date : '';
+            }
+          },
+          grid: { color: t.grid }
+        },
+        y: {
+          min: 40000,
+          max: 105000,
+          ticks: {
+            color: t.tick,
+            font: { family: 'monospace', size: 11 },
+            callback: v => (v / 1000).toFixed(0) + 'k'
+          },
+          grid: { color: t.grid }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: t.tooltipBg,
+          borderColor: t.tooltipBorder,
+          borderWidth: 1,
+          titleColor: t.tooltipTitle,
+          bodyColor: t.tooltipBody,
+          callbacks: {
+            title: items => labels[items[0].dataIndex],
+            label: ctx => ' ' + ctx.raw.toLocaleString(document.documentElement.lang === 'es' ? 'es-ES' : 'en-US') + ' vCore-s remaining'
+          }
+        }
+      }
+    },
+    plugins: [limitPlugin]
+  });
+}
+
 // ── Schema tabs ─────────────────────────────────────────────────────────────
 function initSchemaTabs() {
   document.querySelectorAll('.schema-tabs').forEach(tabGroup => {
@@ -432,9 +585,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // Animated counters
   document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
 
-  // Chart trigger
+  // Chart triggers
   const chartEl = document.getElementById('vcoreChart');
   if (chartEl) chartObserver.observe(chartEl);
+
+  const realChartEl = document.getElementById('realConsumptionChart');
+  if (realChartEl) {
+    const realObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          buildRealConsumptionChart();
+          realObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    realObserver.observe(realChartEl);
+  }
 
   // Typewriter
   const tw = document.querySelector('.typewriter');
