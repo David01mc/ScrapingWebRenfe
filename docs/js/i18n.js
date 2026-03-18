@@ -12,12 +12,12 @@ const TRANSLATIONS = {
 
     // Hero
     'hero.status': 'En producción · Azure VM B1s · Ubuntu 22.04',
-    'hero.title': 'Captura de Trenes Renfe',
+    'hero.title': 'Captura de trenes Renfe',
     'hero.subtitle': 'Pipeline de datos en tiempo real desplegado en Azure Cloud. Captura GPS, retrasos y alertas de 3 redes ferroviarias cada 30 segundos mediante feeds GTFS-RT oficiales. Persiste en Azure SQL con estrategia batch optimizada al 95% y calcula velocidad y rumbo mediante Haversine.',
     'hero.cta.github': 'Ver en GitHub',
     'hero.cta.download': 'Descargar ZIP',
-    'hero.badge.realtime': 'Tiempo Real',
-    'hero.badge.opensource': 'Open Source',
+    'hero.badge.realtime': 'Tiempo real',
+    'hero.badge.opensource': 'Open source',
     'hero.badge.academic': 'Académico',
 
     // Stats
@@ -38,9 +38,9 @@ const TRANSLATIONS = {
     'how.step3.desc': '<a href="#gloss-flush" class="gloss-link">Flush</a> a Azure SQL cada 4 horas con una única conexión. La base de datos entra en <a href="#gloss-autopause" class="gloss-link">auto-pause</a> entre flushes, minimizando el consumo del tier gratuito.',
 
     // Architecture
-    'arch.title': 'Arquitectura del Sistema',
+    'arch.title': 'Arquitectura del sistema',
     'arch.subtitle': 'Un script unificado gestiona las tres fuentes de datos y optimiza el consumo de Azure SQL mediante <a href="#gloss-batch" class="gloss-link">batching</a> en memoria',
-    'arch.flow.title': 'Flujo de Datos Detallado',
+    'arch.flow.title': 'Flujo de datos detallado',
     'arch.tech.title': 'Tecnologías',
     'arch.tech.capture': 'Captura HTTP',
     'arch.tech.capture.desc': 'GET cada 30s a Renfe',
@@ -56,7 +56,7 @@ const TRANSLATIONS = {
     'arch.tech.logs.desc': '/opt/renfe/renfe-capture.log',
 
     // Data
-    'data.title': 'Datos Capturados',
+    'data.title': 'Datos capturados',
     'data.subtitle': 'Tres fuentes de datos oficiales de Renfe (licencia CC BY 4.0), filtradas geográficamente y almacenadas con esquema optimizado',
     'data.asturias.title': 'Cercanías Asturias',
     'data.asturias.desc': 'Red de cercanías del norte de España. Filtrado por <a href="#gloss-bbox" class="gloss-link">bounding box</a> geográfico.',
@@ -80,7 +80,7 @@ const TRANSLATIONS = {
     'data.fields.line': 'Línea extraída del label (C1, C2...)',
 
     // Optimization
-    'opt.title': 'Optimización de Consumo Azure SQL',
+    'opt.title': 'Optimización de consumo Azure SQL',
     'opt.subtitle': 'La evolución del sistema desde conexión persistente hasta batch de 4 horas redujo el consumo un 95%',
     'opt.chart.title': 'Consumo mensual por versión (<a href="#gloss-vcore" class="gloss-link">vCore</a>-segundos)',
     'opt.limit': 'Límite gratuito: 100.000 <a href="#gloss-vcore" class="gloss-link">vCore</a>-s/mes',
@@ -103,7 +103,7 @@ const TRANSLATIONS = {
     'opt.real.desc': 'El eje Y muestra los vCore-segundos gratuitos <strong>restantes</strong> del mes (máximo 100.000). La línea <strong>cae</strong> cada vez que la base de datos se activa para un flush (~60 s); las secciones <strong>planas</strong> nocturnas (23:00–06:00 UTC) son las pausas automáticas donde la BD duerme y no consume nada.',
 
     // Speed
-    'speed.title': 'Cálculo de Velocidad y <a href="#gloss-bearing" class="gloss-link">Bearing</a>',
+    'speed.title': 'Cálculo de velocidad y <a href="#gloss-bearing" class="gloss-link">bearing</a>',
     'speed.subtitle': 'Renfe no publica velocidad ni rumbo en sus feeds. El sistema los calcula derivándolos de <a href="#gloss-snapshot" class="gloss-link">snapshots</a> consecutivos mediante <a href="#gloss-haversine" class="gloss-link">Haversine</a>',
     'speed.problem.title': 'El problema',
     'speed.problem.desc': 'El API GTFS-RT de Renfe incluye solo latitud y longitud. Para cercanías, las coordenadas GPS se actualizan cada 2-10 minutos (no cada 20s como el feed), lo que requiere compensación temporal.',
@@ -119,14 +119,14 @@ const TRANSLATIONS = {
     'speed.cache.note': 'Ambos cachés viven toda la sesión del proceso. Sin consultas a la BD.',
 
     // Schema
-    'schema.title': 'Esquema de Datos',
+    'schema.title': 'Esquema de datos',
     'schema.subtitle': 'Todas las tablas se crean automáticamente al arrancar el script. 8 tablas en total.',
     'schema.col.column': 'Columna',
     'schema.col.type': 'Tipo',
     'schema.col.desc': 'Descripción',
 
     // Setup
-    'setup.title': 'Puesta en Marcha',
+    'setup.title': 'Puesta en marcha',
     'setup.subtitle': 'Desde cero hasta capturando datos en producción en 9 pasos',
     'setup.prereq': 'Prerrequisitos',
     'setup.prereq.vm': 'VM Azure B1s con Ubuntu 22.04',
@@ -145,7 +145,7 @@ const TRANSLATIONS = {
     'setup.step9.title': 'Ver logs en tiempo real',
 
     // Query
-    'query.title': 'Consultar los Datos',
+    'query.title': 'Consultar los datos',
     'query.subtitle': 'Los datos son accesibles desde cualquier cliente SQL o directamente con Python/pandas',
     'query.clients.title': 'Clientes compatibles',
     'query.clients.note': 'Añade tu IP local al firewall de Azure SQL: Portal → SQL Server → Networking → Firewall rules',
@@ -179,7 +179,7 @@ const TRANSLATIONS = {
     'hl.opt.desc': 'De 900k a 45k vCore-s/mes en 4 iteraciones — sistema operativo durante el mes completo dentro del tier gratuito.',
     'hl.prod.title': 'Sistema en producción',
     'hl.prod.desc': 'Azure VM B1s, Ubuntu 22.04, systemd. Auto-reinicio ante fallos, pausa nocturna automática, operación completamente autónoma.',
-    'hl.data.title': 'Filas/mes · ML-Ready',
+    'hl.data.title': 'Filas/mes · ML-ready',
     'hl.data.desc': 'Dataset estructurado en 8 tablas Azure SQL. Preparado para predicción de retrasos, análisis de velocidad y modelos ML de transporte público.',
 
     // Footer
@@ -284,16 +284,16 @@ const TRANSLATIONS = {
 
     // Hero
     'hero.status': 'Live in production · Azure VM B1s · Ubuntu 22.04',
-    'hero.title': 'Renfe Train Capture System',
+    'hero.title': 'Renfe train capture system',
     'hero.subtitle': 'End-to-end real-time data pipeline deployed on Azure Cloud. Polls 3 official GTFS-RT rail feeds every 30s — GPS positions, trip delays and service alerts. Persists to Azure SQL with a 95%-optimized batch strategy and derives speed & bearing via Haversine formula.',
     'hero.cta.github': 'View on GitHub',
     'hero.cta.download': 'Download ZIP',
-    'hero.badge.realtime': 'Real-Time',
-    'hero.badge.opensource': 'Open Source',
+    'hero.badge.realtime': 'Real-time',
+    'hero.badge.opensource': 'Open source',
     'hero.badge.academic': 'Academic',
 
     // Stats
-    'stats.tables.label': 'Azure SQL Tables',
+    'stats.tables.label': 'Azure SQL tables',
     'stats.interval.label': 'seconds between captures',
     'stats.rows.label': 'rows per <a href="#gloss-flush" class="gloss-link">flush</a>',
     'stats.zones.label': 'geographic zones',
@@ -310,11 +310,11 @@ const TRANSLATIONS = {
     'how.step3.desc': '<a href="#gloss-flush" class="gloss-link">Flush</a> to Azure SQL every 4 hours with a single connection. The database <a href="#gloss-autopause" class="gloss-link">auto-pauses</a> between flushes, minimizing free tier consumption.',
 
     // Architecture
-    'arch.title': 'System Architecture',
+    'arch.title': 'System architecture',
     'arch.subtitle': 'A unified script manages three data sources and optimizes Azure SQL consumption through in-memory <a href="#gloss-batch" class="gloss-link">batching</a>',
-    'arch.flow.title': 'Detailed Data Flow',
+    'arch.flow.title': 'Detailed data flow',
     'arch.tech.title': 'Technologies',
-    'arch.tech.capture': 'HTTP Capture',
+    'arch.tech.capture': 'HTTP capture',
     'arch.tech.capture.desc': 'GET every 30s to Renfe',
     'arch.tech.parse': 'Parsing',
     'arch.tech.parse.desc': 'JSON → tuples → RAM batch',
@@ -328,7 +328,7 @@ const TRANSLATIONS = {
     'arch.tech.logs.desc': '/opt/renfe/renfe-capture.log',
 
     // Data
-    'data.title': 'Captured Data',
+    'data.title': 'Captured data',
     'data.subtitle': 'Three official Renfe data sources (CC BY 4.0 license), geographically filtered and stored with an optimized schema',
     'data.asturias.title': 'Cercanías Asturias',
     'data.asturias.desc': 'Commuter rail network of northern Spain. Filtered by geographic <a href="#gloss-bbox" class="gloss-link">bounding box</a>.',
@@ -338,7 +338,7 @@ const TRANSLATIONS = {
     'data.cadiz.desc': 'Commuter rail network of the Bay of Cádiz. Filtered by geographic <a href="#gloss-bbox" class="gloss-link">bounding box</a>.',
     'data.cadiz.bbox': 'Zone: lat 36.3–37.5 / lon -6.5–-5.7',
     'data.cadiz.tables': '3 tables: snapshots, trip_updates, alerts',
-    'data.largo.title': 'Long Distance',
+    'data.largo.title': 'Long distance',
     'data.largo.desc': 'All AVE, Alvia, Avant and Intercity trains across Spain. No geographic filter.',
     'data.largo.bbox': 'Coverage: all Spain (~145 active trains)',
     'data.largo.tables': '3 tables: train_snapshots, itineraries, stations',
@@ -352,7 +352,7 @@ const TRANSLATIONS = {
     'data.fields.line': 'Line extracted from label (C1, C2...)',
 
     // Optimization
-    'opt.title': 'Azure SQL Consumption Optimization',
+    'opt.title': 'Azure SQL consumption optimization',
     'opt.subtitle': 'The system evolved from persistent connection to 4-hour batching, reducing consumption by 95%',
     'opt.chart.title': 'Monthly consumption by version (<a href="#gloss-vcore" class="gloss-link">vCore</a>-seconds)',
     'opt.limit': 'Free tier limit: 100,000 <a href="#gloss-vcore" class="gloss-link">vCore</a>-s/month',
@@ -375,7 +375,7 @@ const TRANSLATIONS = {
     'opt.real.desc': 'The Y-axis shows <strong>remaining</strong> free vCore-seconds for the month (100,000 max). The line <strong>drops</strong> each time the database wakes up for a flush (~60 s); the <strong>flat</strong> overnight sections (23:00–06:00 UTC) are the automatic pauses where the DB sleeps and consumes nothing.',
 
     // Speed
-    'speed.title': 'Speed and <a href="#gloss-bearing" class="gloss-link">Bearing</a> Calculation',
+    'speed.title': 'Speed and <a href="#gloss-bearing" class="gloss-link">bearing</a> calculation',
     'speed.subtitle': 'Renfe does not publish speed or bearing in its feeds. The system computes them from consecutive <a href="#gloss-snapshot" class="gloss-link">snapshots</a> using <a href="#gloss-haversine" class="gloss-link">Haversine</a>',
     'speed.problem.title': 'The problem',
     'speed.problem.desc': "Renfe's GTFS-RT API only includes latitude and longitude. For cercanías, GPS coordinates update every 2-10 minutes (not every 20s like the feed), requiring temporal compensation.",
@@ -391,14 +391,14 @@ const TRANSLATIONS = {
     'speed.cache.note': 'Both caches live for the entire process session. Zero database queries.',
 
     // Schema
-    'schema.title': 'Data Schema',
+    'schema.title': 'Data schema',
     'schema.subtitle': 'All tables are created automatically on script startup. 8 tables total.',
     'schema.col.column': 'Column',
     'schema.col.type': 'Type',
     'schema.col.desc': 'Description',
 
     // Setup
-    'setup.title': 'Getting Started',
+    'setup.title': 'Getting started',
     'setup.subtitle': 'From zero to capturing production data in 9 steps',
     'setup.prereq': 'Prerequisites',
     'setup.prereq.vm': 'Azure B1s VM with Ubuntu 22.04',
@@ -417,7 +417,7 @@ const TRANSLATIONS = {
     'setup.step9.title': 'Watch logs in real time',
 
     // Query
-    'query.title': 'Querying the Data',
+    'query.title': 'Querying the data',
     'query.subtitle': 'Data is accessible from any SQL client or directly with Python/pandas',
     'query.clients.title': 'Compatible clients',
     'query.clients.note': 'Add your local IP to Azure SQL firewall: Portal → SQL Server → Networking → Firewall rules',
@@ -425,7 +425,7 @@ const TRANSLATIONS = {
     'query.python.title': 'Python / pandas',
 
     // Analysis
-    'analysis.title': 'Analysis and Machine Learning',
+    'analysis.title': 'Analysis and machine learning',
     'analysis.subtitle': 'Ideal dataset for public transport analysis, delay prediction and ML models',
     'analysis.col.analysis': 'Analysis',
     'analysis.col.data': 'Required data',
@@ -447,11 +447,11 @@ const TRANSLATIONS = {
     'analysis.summary': 'View statistical summary',
 
     // Highlights
-    'hl.opt.title': 'Azure SQL Optimization',
+    'hl.opt.title': 'Azure SQL optimization',
     'hl.opt.desc': 'From 900k to 45k vCore-s/month across 4 iterations — full-month operation within the free tier.',
-    'hl.prod.title': 'Production System',
+    'hl.prod.title': 'Production system',
     'hl.prod.desc': 'Azure VM B1s, Ubuntu 22.04, systemd. Auto-restart on failure, automatic night pause, fully autonomous operation.',
-    'hl.data.title': 'Rows/month · ML-Ready',
+    'hl.data.title': 'Rows/month · ML-ready',
     'hl.data.desc': '8-table Azure SQL schema. Ready for delay prediction, speed analysis and public transport ML models.',
 
     // Footer
@@ -468,7 +468,7 @@ const TRANSLATIONS = {
     'dir.S': 'South', 'dir.SW': 'Southwest', 'dir.W': 'West', 'dir.NW': 'Northwest',
 
     // Glossary
-    'gloss.title': 'Railway & Technical Glossary',
+    'gloss.title': 'Railway & technical glossary',
     'gloss.subtitle': 'Definitions of technical terms used throughout this project, listed alphabetically.',
     'cat.train': 'Railway',
     'cat.tech': 'Technical',
