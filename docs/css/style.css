@@ -396,6 +396,11 @@ body.day-mode .code-header            { background: #e6e9ed; }
   text-align: center; color: var(--accent-2); font-size: 0.85rem;
   font-family: var(--font-mono); margin-top: 12px;
 }
+.chart-explanation {
+  text-align: center; color: var(--text-muted); font-size: 0.88rem;
+  max-width: 680px; margin: 12px auto 0; line-height: 1.6;
+}
+.chart-explanation strong { color: var(--text-primary); }
 .opt-table-wrapper { overflow-x: auto; margin-bottom: 40px; }
 .opt-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .opt-table th {

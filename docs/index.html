@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
 
   <!-- Our styles -->
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
 
@@ -748,23 +748,23 @@
 <!-- ── Project highlights ────────────────────────────────────────────────── -->
 <section class="highlights-section">
   <div class="container">
-    <div class="highlights-grid">
+    <div class="highlights-grid fade-in">
 
-      <div class="highlight-card fade-in">
+      <div class="highlight-card">
         <div class="hl-icon"><i class="fas fa-arrow-trend-down"></i></div>
         <div class="hl-big">−95%</div>
         <div class="hl-label" data-i18n="hl.opt.title">Optimización Azure SQL</div>
         <div class="hl-desc" data-i18n="hl.opt.desc">De 900k a 45k vCore-s/mes en 4 iteraciones de optimización — sistema full-month dentro del tier gratuito.</div>
       </div>
 
-      <div class="highlight-card fade-in">
+      <div class="highlight-card">
         <div class="hl-icon"><i class="fas fa-server"></i></div>
         <div class="hl-big">24/7</div>
         <div class="hl-label" data-i18n="hl.prod.title">Sistema en producción</div>
         <div class="hl-desc" data-i18n="hl.prod.desc">Azure VM B1s con Ubuntu 22.04. Servicio systemd con auto-reinicio, pausa nocturna automática y operación completamente autónoma.</div>
       </div>
 
-      <div class="highlight-card fade-in">
+      <div class="highlight-card">
         <div class="hl-icon"><i class="fas fa-brain"></i></div>
         <div class="hl-big">~1.5M</div>
         <div class="hl-label" data-i18n="hl.data.title">Filas/mes · ML-Ready</div>
@@ -1373,6 +1373,7 @@
         <canvas id="realConsumptionChart"></canvas>
       </div>
       <p class="opt-limit-note" data-i18n="opt.real.source">Fuente: Azure Monitor · Free amount remaining (Min) · SQLJoseDavid</p>
+      <p class="chart-explanation" data-i18n="opt.real.desc">El eje Y muestra los vCore-segundos gratuitos <strong>restantes</strong> del mes (máximo 100.000). La línea <strong>cae</strong> cada vez que la base de datos se activa para un flush (~60 s); las secciones <strong>planas</strong> nocturnas (23:00–06:00 UTC) son las pausas automáticas donde la BD duerme y no consume nada.</p>
     </div>
 
     <!-- Comparison table -->
@@ -2111,76 +2112,76 @@ print(df_ast.groupby("line")["speed"].describe())</code></pre>
 <section id="glossary">
   <div class="container">
     <div class="section-header fade-in">
-      <h2><i class="fas fa-book-open" style="color:var(--accent);margin-right:12px"></i>Glosario ferroviario &amp; técnico</h2>
-      <p>Definiciones de los términos técnicos que aparecen en este proyecto, ordenados alfabéticamente.</p>
+      <h2><i class="fas fa-book-open" style="color:var(--accent);margin-right:12px"></i><span data-i18n="gloss.title">Glosario ferroviario &amp; técnico</span></h2>
+      <p data-i18n="gloss.subtitle">Definiciones de los términos técnicos que aparecen en este proyecto, ordenados alfabéticamente.</p>
     </div>
     <div class="gloss-grid">
 
       <div class="gloss-letter-sep">A</div>
-      <div class="gloss-entry" id="gloss-alert"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Alert / Alerta</dt><dd>Mensaje del feed GTFS-RT que notifica incidencias en el servicio: huelgas, obras, cancelaciones o cambios de andén. Se publica en <code>alerts.json</code>.</dd></div>
-      <div class="gloss-entry" id="gloss-autopause"><span class="gloss-cat cat-azure">Azure</span><dt>Auto-pause</dt><dd>Función de Azure SQL Serverless que detiene automáticamente el cómputo (0 vCores) tras un período de inactividad, ahorrando coste. Al llegar la siguiente conexión, la base de datos se reactiva en segundos.</dd></div>
-      <div class="gloss-entry" id="gloss-ave"><span class="gloss-cat cat-train">Ferroviario</span><dt>AVE</dt><dd>Alta Velocidad Española. Red de trenes de alta velocidad de Renfe que circulan a más de 200 km/h. Comparte infraestructura con Alvia e Intercity en la categoría de Largo Recorrido.</dd></div>
-      <div class="gloss-entry" id="gloss-azure"><span class="gloss-cat cat-azure">Azure</span><dt>Azure (Microsoft Azure)</dt><dd>Plataforma de servicios en la nube de Microsoft. Este proyecto usa dos de sus servicios: <em>Azure Virtual Machine</em> (una VM Linux donde corren los scripts de captura) y <em>Azure SQL Database</em> (la base de datos donde se almacenan los datos de los trenes). Ambos forman parte del tier gratuito o de bajo coste para proyectos académicos.</dd></div>
+      <div class="gloss-entry" id="gloss-alert"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt data-i18n="gloss.alert.dt">Alert / Alerta</dt><dd data-i18n="gloss.alert.dd">Mensaje del feed GTFS-RT que notifica incidencias en el servicio: huelgas, obras, cancelaciones o cambios de andén. Se publica en <code>alerts.json</code>.</dd></div>
+      <div class="gloss-entry" id="gloss-autopause"><span class="gloss-cat cat-azure">Azure</span><dt data-i18n="gloss.autopause.dt">Auto-pause</dt><dd data-i18n="gloss.autopause.dd">Función de Azure SQL Serverless que detiene automáticamente el cómputo (0 vCores) tras un período de inactividad, ahorrando coste. Al llegar la siguiente conexión, la base de datos se reactiva en segundos.</dd></div>
+      <div class="gloss-entry" id="gloss-ave"><span class="gloss-cat cat-train" data-i18n="cat.train">Ferroviario</span><dt data-i18n="gloss.ave.dt">AVE</dt><dd data-i18n="gloss.ave.dd">Alta Velocidad Española. Red de trenes de alta velocidad de Renfe que circulan a más de 200 km/h. Comparte infraestructura con Alvia e Intercity en la categoría de Largo Recorrido.</dd></div>
+      <div class="gloss-entry" id="gloss-azure"><span class="gloss-cat cat-azure">Azure</span><dt data-i18n="gloss.azure.dt">Azure (Microsoft Azure)</dt><dd data-i18n="gloss.azure.dd">Plataforma de servicios en la nube de Microsoft. Este proyecto usa dos de sus servicios: <em>Azure Virtual Machine</em> (una VM Linux donde corren los scripts de captura) y <em>Azure SQL Database</em> (la base de datos donde se almacenan los datos de los trenes). Ambos forman parte del tier gratuito o de bajo coste para proyectos académicos.</dd></div>
 
       <div class="gloss-letter-sep">B</div>
-      <div class="gloss-entry" id="gloss-batch"><span class="gloss-cat cat-tech">Técnico</span><dt>Batch</dt><dd>Estrategia que acumula datos en memoria RAM durante un período (aquí 4 horas) y los escribe todos de una vez en la base de datos, en lugar de hacerlo registro a registro en cada captura.</dd></div>
-      <div class="gloss-entry" id="gloss-bearing"><span class="gloss-cat cat-geo">Geografía</span><dt>Bearing (rumbo)</dt><dd>Ángulo de dirección de movimiento medido en grados respecto al norte geográfico (0° = Norte, 90° = Este, 180° = Sur, 270° = Oeste). Se calcula a partir de dos coordenadas GPS consecutivas usando trigonometría esférica.</dd></div>
-      <div class="gloss-entry" id="gloss-bbox"><span class="gloss-cat cat-geo">Geografía</span><dt>Bounding box (BBox)</dt><dd>Rectángulo geográfico definido por cuatro coordenadas (latitud mínima/máxima, longitud mínima/máxima) que delimita una zona. Se usa para filtrar solo los trenes dentro de esa área geográfica.</dd></div>
+      <div class="gloss-entry" id="gloss-batch"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.batch.dt">Batch</dt><dd data-i18n="gloss.batch.dd">Estrategia que acumula datos en memoria RAM durante un período (aquí 4 horas) y los escribe todos de una vez en la base de datos, en lugar de hacerlo registro a registro en cada captura.</dd></div>
+      <div class="gloss-entry" id="gloss-bearing"><span class="gloss-cat cat-geo" data-i18n="cat.geo">Geografía</span><dt data-i18n="gloss.bearing.dt">Bearing (rumbo)</dt><dd data-i18n="gloss.bearing.dd">Ángulo de dirección de movimiento medido en grados respecto al norte geográfico (0° = Norte, 90° = Este, 180° = Sur, 270° = Oeste). Se calcula a partir de dos coordenadas GPS consecutivas usando trigonometría esférica.</dd></div>
+      <div class="gloss-entry" id="gloss-bbox"><span class="gloss-cat cat-geo" data-i18n="cat.geo">Geografía</span><dt data-i18n="gloss.bbox.dt">Bounding box (BBox)</dt><dd data-i18n="gloss.bbox.dd">Rectángulo geográfico definido por cuatro coordenadas (latitud mínima/máxima, longitud mínima/máxima) que delimita una zona. Se usa para filtrar solo los trenes dentro de esa área geográfica.</dd></div>
 
       <div class="gloss-letter-sep">C</div>
-      <div class="gloss-entry" id="gloss-cercanias"><span class="gloss-cat cat-train">Ferroviario</span><dt>Cercanías</dt><dd>Red de trenes de corta distancia operada por Renfe que conecta núcleos urbanos con sus áreas metropolitanas. Las líneas se identifican con C seguido de un número (C1, C2…). Este proyecto captura datos de Asturias y Cádiz.</dd></div>
+      <div class="gloss-entry" id="gloss-cercanias"><span class="gloss-cat cat-train" data-i18n="cat.train">Ferroviario</span><dt data-i18n="gloss.cercanias.dt">Cercanías</dt><dd data-i18n="gloss.cercanias.dd">Red de trenes de corta distancia operada por Renfe que conecta núcleos urbanos con sus áreas metropolitanas. Las líneas se identifican con C seguido de un número (C1, C2…). Este proyecto captura datos de Asturias y Cádiz.</dd></div>
 
       <div class="gloss-letter-sep">D</div>
-      <div class="gloss-entry" id="gloss-ddl"><span class="gloss-cat cat-tech">Técnico</span><dt>DDL</dt><dd>Data Definition Language. Subconjunto de SQL que define la estructura de la base de datos: <code>CREATE TABLE</code>, <code>ALTER TABLE</code>, <code>DROP TABLE</code>. Se ejecuta al arrancar si las tablas no existen aún.</dd></div>
+      <div class="gloss-entry" id="gloss-ddl"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.ddl.dt">DDL</dt><dd data-i18n="gloss.ddl.dd">Data Definition Language. Subconjunto de SQL que define la estructura de la base de datos: <code>CREATE TABLE</code>, <code>ALTER TABLE</code>, <code>DROP TABLE</code>. Se ejecuta al arrancar si las tablas no existen aún.</dd></div>
 
       <div class="gloss-letter-sep">E</div>
-      <div class="gloss-entry" id="gloss-entity"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Entity</dt><dd>Elemento del array <code>entity[]</code> en un feed GTFS-RT. Cada entidad representa un vehículo, un viaje o una alerta, e incluye un identificador único (<code>id</code>) y los datos asociados en tiempo real.</dd></div>
+      <div class="gloss-entry" id="gloss-entity"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt data-i18n="gloss.entity.dt">Entity</dt><dd data-i18n="gloss.entity.dd">Elemento del array <code>entity[]</code> en un feed GTFS-RT. Cada entidad representa un vehículo, un viaje o una alerta, e incluye un identificador único (<code>id</code>) y los datos asociados en tiempo real.</dd></div>
 
       <div class="gloss-letter-sep">F</div>
-      <div class="gloss-entry" id="gloss-feed"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Feed</dt><dd>Flujo de datos publicado de forma periódica por un servicio. El feed de Renfe se actualiza cada ~20 segundos y contiene posiciones de vehículos, actualizaciones de viajes y alertas de servicio.</dd></div>
-      <div class="gloss-entry" id="gloss-flush"><span class="gloss-cat cat-tech">Técnico</span><dt>Flush</dt><dd>Operación de volcado: escribir en la base de datos todos los datos acumulados en memoria y limpiar el buffer. En este proyecto ocurre cada 4 horas, abriendo una única conexión SQL, insertando en lote y cerrando la conexión.</dd></div>
+      <div class="gloss-entry" id="gloss-feed"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt data-i18n="gloss.feed.dt">Feed</dt><dd data-i18n="gloss.feed.dd">Flujo de datos publicado de forma periódica por un servicio. El feed de Renfe se actualiza cada ~20 segundos y contiene posiciones de vehículos, actualizaciones de viajes y alertas de servicio.</dd></div>
+      <div class="gloss-entry" id="gloss-flush"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.flush.dt">Flush</dt><dd data-i18n="gloss.flush.dd">Operación de volcado: escribir en la base de datos todos los datos acumulados en memoria y limpiar el buffer. En este proyecto ocurre cada 4 horas, abriendo una única conexión SQL, insertando en lote y cerrando la conexión.</dd></div>
 
       <div class="gloss-letter-sep">G</div>
-      <div class="gloss-entry" id="gloss-gtfs"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>GTFS</dt><dd>General Transit Feed Specification. Estándar abierto creado por Google para publicar horarios y rutas de transporte público en un formato común. Lo usan miles de operadores de transporte en todo el mundo.</dd></div>
-      <div class="gloss-entry" id="gloss-gtfsrt"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>GTFS-RT (Realtime)</dt><dd>Extensión de GTFS para datos en tiempo real: posiciones GPS de vehículos, retrasos en paradas y alertas. Renfe lo publica en JSON en <code>gtfsrt.renfe.com</code> actualizándose cada ~20 segundos.</dd></div>
+      <div class="gloss-entry" id="gloss-gtfs"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt data-i18n="gloss.gtfs.dt">GTFS</dt><dd data-i18n="gloss.gtfs.dd">General Transit Feed Specification. Estándar abierto creado por Google para publicar horarios y rutas de transporte público en un formato común. Lo usan miles de operadores de transporte en todo el mundo.</dd></div>
+      <div class="gloss-entry" id="gloss-gtfsrt"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt data-i18n="gloss.gtfsrt.dt">GTFS-RT (Realtime)</dt><dd data-i18n="gloss.gtfsrt.dd">Extensión de GTFS para datos en tiempo real: posiciones GPS de vehículos, retrasos en paradas y alertas. Renfe lo publica en JSON en <code>gtfsrt.renfe.com</code> actualizándose cada ~20 segundos.</dd></div>
 
       <div class="gloss-letter-sep">H</div>
-      <div class="gloss-entry" id="gloss-haversine"><span class="gloss-cat cat-geo">Geografía</span><dt>Haversine</dt><dd>Fórmula matemática que calcula la distancia entre dos puntos sobre la superficie esférica de la Tierra a partir de sus coordenadas GPS. Se usa para calcular la distancia recorrida entre dos capturas y derivar la velocidad del tren.</dd></div>
-      <div class="gloss-entry" id="gloss-http"><span class="gloss-cat cat-tech">Técnico</span><dt>HTTP GET</dt><dd>Método del protocolo HTTP para solicitar datos a un servidor web. El script Python ejecuta un <code>requests.get(url)</code> cada 30 segundos para descargar los feeds JSON de Renfe.</dd></div>
+      <div class="gloss-entry" id="gloss-haversine"><span class="gloss-cat cat-geo" data-i18n="cat.geo">Geografía</span><dt data-i18n="gloss.haversine.dt">Haversine</dt><dd data-i18n="gloss.haversine.dd">Fórmula matemática que calcula la distancia entre dos puntos sobre la superficie esférica de la Tierra a partir de sus coordenadas GPS. Se usa para calcular la distancia recorrida entre dos capturas y derivar la velocidad del tren.</dd></div>
+      <div class="gloss-entry" id="gloss-http"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.http.dt">HTTP GET</dt><dd data-i18n="gloss.http.dd">Método del protocolo HTTP para solicitar datos a un servidor web. El script Python ejecuta un <code>requests.get(url)</code> cada 30 segundos para descargar los feeds JSON de Renfe.</dd></div>
 
       <div class="gloss-letter-sep">J</div>
-      <div class="gloss-entry" id="gloss-json"><span class="gloss-cat cat-tech">Técnico</span><dt>JSON</dt><dd>JavaScript Object Notation. Formato de texto ligero para intercambiar datos estructurados mediante pares clave–valor y listas. Renfe publica sus feeds GTFS-RT en JSON en lugar del formato binario Protobuf habitual.</dd></div>
+      <div class="gloss-entry" id="gloss-json"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.json.dt">JSON</dt><dd data-i18n="gloss.json.dd">JavaScript Object Notation. Formato de texto ligero para intercambiar datos estructurados mediante pares clave–valor y listas. Renfe publica sus feeds GTFS-RT en JSON en lugar del formato binario Protobuf habitual.</dd></div>
 
       <div class="gloss-letter-sep">L</div>
-      <div class="gloss-entry" id="gloss-lr"><span class="gloss-cat cat-train">Ferroviario</span><dt>Largo Recorrido</dt><dd>Categoría de trenes de Renfe para trayectos de media y larga distancia (AVE, Alvia, Intercity, Talgo…). Sus datos se publican en <code>tiempo-real.largorecorrido.renfe.com</code> cada ~15 segundos.</dd></div>
-      <div class="gloss-entry" id="gloss-latencia"><span class="gloss-cat cat-tech">Técnico</span><dt>Latencia GPS</dt><dd>Tiempo entre que el tren se mueve y que ese cambio aparece en los datos capturados. En cercanías puede llegar a 2–10 minutos por la baja frecuencia de actualización GPS que publica Renfe.</dd></div>
+      <div class="gloss-entry" id="gloss-lr"><span class="gloss-cat cat-train" data-i18n="cat.train">Ferroviario</span><dt data-i18n="gloss.lr.dt">Largo Recorrido</dt><dd data-i18n="gloss.lr.dd">Categoría de trenes de Renfe para trayectos de media y larga distancia (AVE, Alvia, Intercity, Talgo…). Sus datos se publican en <code>tiempo-real.largorecorrido.renfe.com</code> cada ~15 segundos.</dd></div>
+      <div class="gloss-entry" id="gloss-latencia"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.latencia.dt">Latencia GPS</dt><dd data-i18n="gloss.latencia.dd">Tiempo entre que el tren se mueve y que ese cambio aparece en los datos capturados. En cercanías puede llegar a 2–10 minutos por la baja frecuencia de actualización GPS que publica Renfe.</dd></div>
 
       <div class="gloss-letter-sep">O</div>
-      <div class="gloss-entry" id="gloss-odbc"><span class="gloss-cat cat-tech">Técnico</span><dt>ODBC</dt><dd>Open Database Connectivity. Interfaz estándar que permite a aplicaciones conectarse a bases de datos independientemente del fabricante. Este proyecto usa el <em>ODBC Driver 18 for SQL Server</em> de Microsoft en la VM Ubuntu.</dd></div>
+      <div class="gloss-entry" id="gloss-odbc"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.odbc.dt">ODBC</dt><dd data-i18n="gloss.odbc.dd">Open Database Connectivity. Interfaz estándar que permite a aplicaciones conectarse a bases de datos independientemente del fabricante. Este proyecto usa el <em>ODBC Driver 18 for SQL Server</em> de Microsoft en la VM Ubuntu.</dd></div>
 
       <div class="gloss-letter-sep">P</div>
-      <div class="gloss-entry" id="gloss-pantografo"><span class="gloss-cat cat-train">Ferroviario</span><dt>Pantógrafo</dt><dd>Dispositivo articulado en el techo del tren que mantiene contacto con la catenaria (el cable eléctrico aéreo) para captar la corriente que alimenta los motores. Elemento distintivo de los trenes eléctricos de alta velocidad.</dd></div>
-      <div class="gloss-entry" id="gloss-parallax"><span class="gloss-cat cat-tech">Técnico</span><dt>Parallax (efecto)</dt><dd>Técnica visual donde distintas capas de una escena se desplazan a velocidades distintas, creando sensación de profundidad. Cuanto más cercana parece la capa, más rápido se mueve. Usado en la animación del tren de la cabecera.</dd></div>
-      <div class="gloss-entry" id="gloss-pip"><span class="gloss-cat cat-tech">Técnico</span><dt>pip</dt><dd>Gestor de paquetes oficial de Python. Instala librerías desde PyPI con <code>pip install nombre</code>. En este proyecto se usa para instalar <code>requests</code> y <code>pyodbc</code> en la VM.</dd></div>
-      <div class="gloss-entry" id="gloss-pyodbc"><span class="gloss-cat cat-tech">Técnico</span><dt>pyodbc</dt><dd>Librería Python que permite conectarse y ejecutar consultas SQL en bases de datos mediante ODBC. Es el puente entre los scripts Python y Azure SQL Database en este proyecto.</dd></div>
+      <div class="gloss-entry" id="gloss-pantografo"><span class="gloss-cat cat-train" data-i18n="cat.train">Ferroviario</span><dt data-i18n="gloss.pantografo.dt">Pantógrafo</dt><dd data-i18n="gloss.pantografo.dd">Dispositivo articulado en el techo del tren que mantiene contacto con la catenaria (el cable eléctrico aéreo) para captar la corriente que alimenta los motores. Elemento distintivo de los trenes eléctricos de alta velocidad.</dd></div>
+      <div class="gloss-entry" id="gloss-parallax"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.parallax.dt">Parallax (efecto)</dt><dd data-i18n="gloss.parallax.dd">Técnica visual donde distintas capas de una escena se desplazan a velocidades distintas, creando sensación de profundidad. Cuanto más cercana parece la capa, más rápido se mueve. Usado en la animación del tren de la cabecera.</dd></div>
+      <div class="gloss-entry" id="gloss-pip"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.pip.dt">pip</dt><dd data-i18n="gloss.pip.dd">Gestor de paquetes oficial de Python. Instala librerías desde PyPI con <code>pip install nombre</code>. En este proyecto se usa para instalar <code>requests</code> y <code>pyodbc</code> en la VM.</dd></div>
+      <div class="gloss-entry" id="gloss-pyodbc"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.pyodbc.dt">pyodbc</dt><dd data-i18n="gloss.pyodbc.dd">Librería Python que permite conectarse y ejecutar consultas SQL en bases de datos mediante ODBC. Es el puente entre los scripts Python y Azure SQL Database en este proyecto.</dd></div>
 
       <div class="gloss-letter-sep">R</div>
-      <div class="gloss-entry" id="gloss-ram"><span class="gloss-cat cat-tech">Técnico</span><dt>RAM</dt><dd>Random Access Memory. Memoria de acceso rápido y volátil. Los datos capturados se acumulan en RAM durante 4 horas para minimizar las conexiones a Azure SQL y reducir el consumo de vCore-segundos del tier gratuito.</dd></div>
+      <div class="gloss-entry" id="gloss-ram"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.ram.dt">RAM</dt><dd data-i18n="gloss.ram.dd">Random Access Memory. Memoria de acceso rápido y volátil. Los datos capturados se acumulan en RAM durante 4 horas para minimizar las conexiones a Azure SQL y reducir el consumo de vCore-segundos del tier gratuito.</dd></div>
 
       <div class="gloss-letter-sep">S</div>
-      <div class="gloss-entry" id="gloss-scraping"><span class="gloss-cat cat-tech">Técnico</span><dt>Scraping / Scraper</dt><dd>Técnica de extracción automatizada de datos de fuentes externas (APIs o webs) mediante código. Un scraper hace peticiones periódicas, analiza la respuesta y guarda los datos relevantes. Aquí se capturan feeds JSON de Renfe cada 30 segundos.</dd></div>
-      <div class="gloss-entry" id="gloss-serverless"><span class="gloss-cat cat-azure">Azure</span><dt>Serverless</dt><dd>Modelo cloud donde el cómputo escala automáticamente y se detiene (a 0) cuando no hay actividad. Azure SQL Serverless cobra solo los vCore-segundos realmente consumidos, ideal para cargas de trabajo intermitentes.</dd></div>
-      <div class="gloss-entry" id="gloss-snapshot"><span class="gloss-cat cat-tech">Técnico</span><dt>Snapshot</dt><dd>Captura puntual del estado de un dato en un instante concreto. Cada 30 segundos se genera un snapshot (fila en la tabla) con la posición, velocidad estimada y timestamp de cada tren capturado.</dd></div>
-      <div class="gloss-entry" id="gloss-ssh"><span class="gloss-cat cat-tech">Técnico</span><dt>SSH</dt><dd>Secure Shell. Protocolo cifrado para conectarse de forma segura a un servidor remoto desde la terminal. Se accede a la VM de Azure con una clave privada (<code>.pem</code>) en lugar de contraseña.</dd></div>
-      <div class="gloss-entry" id="gloss-systemd"><span class="gloss-cat cat-tech">Técnico</span><dt>systemd</dt><dd>Sistema de gestión de servicios de Linux que arranca, supervisa y reinicia procesos automáticamente. Los scripts de captura corren como servicios systemd, garantizando que se inicien con la VM y se relancen ante cualquier fallo.</dd></div>
+      <div class="gloss-entry" id="gloss-scraping"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.scraping.dt">Scraping / Scraper</dt><dd data-i18n="gloss.scraping.dd">Técnica de extracción automatizada de datos de fuentes externas (APIs o webs) mediante código. Un scraper hace peticiones periódicas, analiza la respuesta y guarda los datos relevantes. Aquí se capturan feeds JSON de Renfe cada 30 segundos.</dd></div>
+      <div class="gloss-entry" id="gloss-serverless"><span class="gloss-cat cat-azure">Azure</span><dt data-i18n="gloss.serverless.dt">Serverless</dt><dd data-i18n="gloss.serverless.dd">Modelo cloud donde el cómputo escala automáticamente y se detiene (a 0) cuando no hay actividad. Azure SQL Serverless cobra solo los vCore-segundos realmente consumidos, ideal para cargas de trabajo intermitentes.</dd></div>
+      <div class="gloss-entry" id="gloss-snapshot"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.snapshot.dt">Snapshot</dt><dd data-i18n="gloss.snapshot.dd">Captura puntual del estado de un dato en un instante concreto. Cada 30 segundos se genera un snapshot (fila en la tabla) con la posición, velocidad estimada y timestamp de cada tren capturado.</dd></div>
+      <div class="gloss-entry" id="gloss-ssh"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.ssh.dt">SSH</dt><dd data-i18n="gloss.ssh.dd">Secure Shell. Protocolo cifrado para conectarse de forma segura a un servidor remoto desde la terminal. Se accede a la VM de Azure con una clave privada (<code>.pem</code>) en lugar de contraseña.</dd></div>
+      <div class="gloss-entry" id="gloss-systemd"><span class="gloss-cat cat-tech" data-i18n="cat.tech">Técnico</span><dt data-i18n="gloss.systemd.dt">systemd</dt><dd data-i18n="gloss.systemd.dd">Sistema de gestión de servicios de Linux que arranca, supervisa y reinicia procesos automáticamente. Los scripts de captura corren como servicios systemd, garantizando que se inicien con la VM y se relancen ante cualquier fallo.</dd></div>
 
       <div class="gloss-letter-sep">T</div>
-      <div class="gloss-entry" id="gloss-tripid"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Trip ID</dt><dd>Identificador único de un viaje programado en el sistema GTFS. Combina número de tren, línea y fecha (p. ej. <code>3015L23533C1</code>). Permite enlazar la posición GPS de un vehículo con su itinerario de paradas previstas.</dd></div>
-      <div class="gloss-entry" id="gloss-tripupdate"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt>Trip Update</dt><dd>Mensaje del feed GTFS-RT con el estado en tiempo real de un viaje: retrasos de llegada y salida en cada parada, y cancelaciones parciales o totales. Se publica en <code>trip_updates.json</code>.</dd></div>
+      <div class="gloss-entry" id="gloss-tripid"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt data-i18n="gloss.tripid.dt">Trip ID</dt><dd data-i18n="gloss.tripid.dd">Identificador único de un viaje programado en el sistema GTFS. Combina número de tren, línea y fecha (p. ej. <code>3015L23533C1</code>). Permite enlazar la posición GPS de un vehículo con su itinerario de paradas previstas.</dd></div>
+      <div class="gloss-entry" id="gloss-tripupdate"><span class="gloss-cat cat-gtfs">GTFS-RT</span><dt data-i18n="gloss.tripupdate.dt">Trip Update</dt><dd data-i18n="gloss.tripupdate.dd">Mensaje del feed GTFS-RT con el estado en tiempo real de un viaje: retrasos de llegada y salida en cada parada, y cancelaciones parciales o totales. Se publica en <code>trip_updates.json</code>.</dd></div>
 
       <div class="gloss-letter-sep">V</div>
-      <div class="gloss-entry" id="gloss-vcore"><span class="gloss-cat cat-azure">Azure</span><dt>vCore</dt><dd>Núcleo virtual (Virtual Core). Unidad de cómputo de Azure SQL. Se cobra en vCore-segundos: vCores asignados × tiempo activo. El tier gratuito incluye 100.000 vCore-s/mes (~28 horas de cómputo a 1 vCore).</dd></div>
-      <div class="gloss-entry" id="gloss-vm"><span class="gloss-cat cat-azure">Azure</span><dt>VM (Virtual Machine)</dt><dd>Máquina virtual: ordenador simulado que corre sobre hardware físico en la nube. Este proyecto usa una <em>Standard B1s</em> de Azure (1 vCPU, 1 GB RAM, Ubuntu 22.04) como servidor de captura permanente de datos.</dd></div>
+      <div class="gloss-entry" id="gloss-vcore"><span class="gloss-cat cat-azure">Azure</span><dt data-i18n="gloss.vcore.dt">vCore</dt><dd data-i18n="gloss.vcore.dd">Núcleo virtual (Virtual Core). Unidad de cómputo de Azure SQL. Se cobra en vCore-segundos: vCores asignados × tiempo activo. El tier gratuito incluye 100.000 vCore-s/mes (~28 horas de cómputo a 1 vCore).</dd></div>
+      <div class="gloss-entry" id="gloss-vm"><span class="gloss-cat cat-azure">Azure</span><dt data-i18n="gloss.vm.dt">VM (Virtual Machine)</dt><dd data-i18n="gloss.vm.dd">Máquina virtual: ordenador simulado que corre sobre hardware físico en la nube. Este proyecto usa una <em>Standard B1s</em> de Azure (1 vCPU, 1 GB RAM, Ubuntu 22.04) como servidor de captura permanente de datos.</dd></div>
 
     </div>
   </div>
@@ -2197,8 +2198,7 @@ print(df_ast.groupby("line")["speed"].describe())</code></pre>
         <div class="footer-author">
           <span style="font-size:0.82rem;color:var(--text-muted)" data-i18n="footer.by">By</span>
           <a href="https://github.com/David01mc" target="_blank"><i class="fab fa-github"></i> David01mc</a>
-          <!-- Update href with your LinkedIn profile URL -->
-          <a href="https://www.linkedin.com/in/YOUR_PROFILE" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+          <a href="https://www.linkedin.com/in/jose-david-manjon-cabeza/" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
         </div>
       </div>
       <div class="footer-links">
@@ -2240,7 +2240,7 @@ print(df_ast.groupby("line")["speed"].describe())</code></pre>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-<script src="js/i18n.js"></script>
-<script src="js/main.js"></script>
+<script src="js/i18n.js?v=4"></script>
+<script src="js/main.js?v=4"></script>
 </body>
 </html>
