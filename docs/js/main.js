@@ -7,7 +7,7 @@ function animateCounter(el, target, duration = 1500, suffix = '') {
     const progress = Math.min(elapsed / duration, 1);
     const ease = 1 - Math.pow(1 - progress, 3);
     const value = Math.round(ease * target);
-    el.textContent = value.toLocaleString('es-ES') + suffix;
+    el.textContent = value.toLocaleString(document.documentElement.lang === 'es' ? 'es-ES' : 'en-US') + suffix;
     if (progress < 1) requestAnimationFrame(update);
   };
   requestAnimationFrame(update);
@@ -57,7 +57,7 @@ function buildVCoreChart() {
   const canvas = document.getElementById('vcoreChart');
   if (!canvas || typeof Chart === 'undefined') return;
 
-  const labels = ['V1\nPersistente', 'V2\n20 min', 'V3\n2 horas', 'V4\n4 horas ✓'];
+  const labels = ['V1\nPersistent', 'V2\n20 min', 'V3\n2 hours', 'V4\n4 hours ✓'];
   const data   = [900000, 850000, 80000, 45000];
   const colors = [
     'rgba(248, 81, 73, 0.85)',
@@ -84,7 +84,7 @@ function buildVCoreChart() {
       ctx.setLineDash([]);
       ctx.fillStyle = t.limitLine;
       ctx.font = '12px monospace';
-      ctx.fillText('Límite gratuito: 100.000', chartArea.left + 8, y - 8);
+      ctx.fillText(typeof t === 'function' ? t('chart.limit') : 'Free tier limit: 100,000', chartArea.left + 8, y - 8);
       ctx.restore();
     }
   };
@@ -95,7 +95,7 @@ function buildVCoreChart() {
     data: {
       labels,
       datasets: [{
-        label: 'vCore-segundos / mes',
+        label: 'vCore-seconds / month',
         data,
         backgroundColor: colors,
         borderColor: borderColors,
@@ -117,7 +117,7 @@ function buildVCoreChart() {
           ticks: {
             color: t.tick,
             font: { family: 'monospace', size: 11 },
-            callback: (v) => v >= 1000 ? (v / 1000).toLocaleString('es-ES') + 'k' : v,
+            callback: (v) => v >= 1000 ? (v / 1000).toLocaleString(document.documentElement.lang === 'es' ? 'es-ES' : 'en-US') + 'k' : v,
           },
           grid: { color: t.grid },
         }
@@ -131,7 +131,7 @@ function buildVCoreChart() {
           titleColor: t.tooltipTitle,
           bodyColor: t.tooltipBody,
           callbacks: {
-            label: (ctx) => ' ' + ctx.raw.toLocaleString('es-ES') + ' vCore-s/mes',
+            label: (ctx) => ' ' + ctx.raw.toLocaleString(document.documentElement.lang === 'es' ? 'es-ES' : 'en-US') + ' vCore-s/mo',
           }
         }
       }
@@ -350,8 +350,8 @@ function initHaversineCalc() {
   }
 
   function bearingToDir(b) {
-    const dirs = ['Norte','Noreste','Este','Sureste','Sur','Suroeste','Oeste','Noroeste'];
-    return dirs[Math.round(b / 45) % 8];
+    const keys = ['dir.N','dir.NE','dir.E','dir.SE','dir.S','dir.SW','dir.W','dir.NW'];
+    return typeof t === 'function' ? t(keys[Math.round(b / 45) % 8]) : keys[Math.round(b / 45) % 8];
   }
 
   function update() {
@@ -397,13 +397,16 @@ function initThemeToggle() {
   const icon = document.getElementById('theme-icon');
   if (!btn) return;
 
-  // Default = dark/night. 'day-mode' class activates the light theme.
+  // 'day-mode' class activates the light theme.
   const apply = (day) => {
     document.body.classList.toggle('day-mode', day);
     icon.className = day ? 'fas fa-moon' : 'fas fa-sun';
   };
 
-  apply(localStorage.getItem('theme') === 'day');
+  // Priority: saved preference → system preference (prefers-color-scheme)
+  const saved = localStorage.getItem('theme');
+  const systemDay = window.matchMedia('(prefers-color-scheme: light)').matches;
+  apply(saved ? saved === 'day' : systemDay);
 
   btn.addEventListener('click', () => {
     const isDay = document.body.classList.toggle('day-mode');

@@ -8,6 +8,7 @@ const TRANSLATIONS = {
     'nav.setup': 'Instalación',
     'nav.analysis': 'Análisis',
     'nav.download': 'Descargar',
+    'nav.glossary': 'Glosario',
 
     // Hero
     'hero.title': 'Captura de Trenes Renfe',
@@ -173,6 +174,13 @@ const TRANSLATIONS = {
     'footer.license': 'Datos Renfe bajo licencia CC BY 4.0',
     'footer.academic': 'Proyecto académico',
     'footer.built': 'Construido con Python, Azure y mucho café',
+
+    // Chart
+    'chart.limit': 'Límite gratuito: 100.000',
+
+    // Compass directions
+    'dir.N': 'Norte', 'dir.NE': 'Noreste', 'dir.E': 'Este', 'dir.SE': 'Sureste',
+    'dir.S': 'Sur', 'dir.SW': 'Suroeste', 'dir.W': 'Oeste', 'dir.NW': 'Noroeste',
   },
 
   en: {
@@ -184,6 +192,7 @@ const TRANSLATIONS = {
     'nav.setup': 'Setup',
     'nav.analysis': 'Analysis',
     'nav.download': 'Download',
+    'nav.glossary': 'Glossary',
 
     // Hero
     'hero.title': 'Renfe Train Capture System',
@@ -349,6 +358,13 @@ const TRANSLATIONS = {
     'footer.license': 'Renfe data under CC BY 4.0 license',
     'footer.academic': 'Academic project',
     'footer.built': 'Built with Python, Azure and lots of coffee',
+
+    // Chart
+    'chart.limit': 'Free tier limit: 100,000',
+
+    // Compass directions
+    'dir.N': 'North', 'dir.NE': 'Northeast', 'dir.E': 'East', 'dir.SE': 'Southeast',
+    'dir.S': 'South', 'dir.SW': 'Southwest', 'dir.W': 'West', 'dir.NW': 'Northwest',
   }
 };
 
