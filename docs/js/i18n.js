@@ -11,8 +11,9 @@ const TRANSLATIONS = {
     'nav.glossary': 'Glosario',
 
     // Hero
+    'hero.status': 'En producción · Azure VM B1s · Ubuntu 22.04',
     'hero.title': 'Captura de Trenes Renfe',
-    'hero.subtitle': 'Sistema autónomo de scraping en tiempo real. Recolecta posiciones GPS, retrasos y alertas de Cercanías Asturias, Cercanías Cádiz y Largo Recorrido de toda España. Almacena en Azure SQL Database y calcula velocidades derivadas mediante Haversine.',
+    'hero.subtitle': 'Pipeline de datos en tiempo real desplegado en Azure Cloud. Captura GPS, retrasos y alertas de 3 redes ferroviarias cada 30 segundos mediante feeds GTFS-RT oficiales. Persiste en Azure SQL con estrategia batch optimizada al 95% y calcula velocidad y rumbo mediante Haversine.',
     'hero.cta.github': 'Ver en GitHub',
     'hero.cta.download': 'Descargar ZIP',
     'hero.badge.realtime': 'Tiempo Real',
@@ -172,7 +173,16 @@ const TRANSLATIONS = {
     'analysis.route.data': 'lat, lon, bearing ordenados por tiempo',
     'analysis.summary': 'Ver resumen estadístico',
 
+    // Highlights
+    'hl.opt.title': 'Optimización Azure SQL',
+    'hl.opt.desc': 'De 900k a 45k vCore-s/mes en 4 iteraciones — sistema operativo durante el mes completo dentro del tier gratuito.',
+    'hl.prod.title': 'Sistema en producción',
+    'hl.prod.desc': 'Azure VM B1s, Ubuntu 22.04, systemd. Auto-reinicio ante fallos, pausa nocturna automática, operación completamente autónoma.',
+    'hl.data.title': 'Filas/mes · ML-Ready',
+    'hl.data.desc': 'Dataset estructurado en 8 tablas Azure SQL. Preparado para predicción de retrasos, análisis de velocidad y modelos ML de transporte público.',
+
     // Footer
+    'footer.by': 'Por',
     'footer.license': 'Datos Renfe bajo licencia CC BY 4.0',
     'footer.academic': 'Proyecto académico',
     'footer.built': 'Construido con Python, Azure y mucho café',
@@ -197,8 +207,9 @@ const TRANSLATIONS = {
     'nav.glossary': 'Glossary',
 
     // Hero
+    'hero.status': 'Live in production · Azure VM B1s · Ubuntu 22.04',
     'hero.title': 'Renfe Train Capture System',
-    'hero.subtitle': 'Autonomous real-time scraping system. Collects GPS positions, delays and alerts from Cercanías Asturias, Cercanías Cádiz and Long Distance trains across Spain. Stores in Azure SQL Database and computes derived speeds using Haversine.',
+    'hero.subtitle': 'End-to-end real-time data pipeline deployed on Azure Cloud. Polls 3 official GTFS-RT rail feeds every 30s — GPS positions, trip delays and service alerts. Persists to Azure SQL with a 95%-optimized batch strategy and derives speed & bearing via Haversine formula.',
     'hero.cta.github': 'View on GitHub',
     'hero.cta.download': 'Download ZIP',
     'hero.badge.realtime': 'Real-Time',
@@ -358,7 +369,16 @@ const TRANSLATIONS = {
     'analysis.route.data': 'lat, lon, bearing sorted by time',
     'analysis.summary': 'View statistical summary',
 
+    // Highlights
+    'hl.opt.title': 'Azure SQL Optimization',
+    'hl.opt.desc': 'From 900k to 45k vCore-s/month across 4 iterations — full-month operation within the free tier.',
+    'hl.prod.title': 'Production System',
+    'hl.prod.desc': 'Azure VM B1s, Ubuntu 22.04, systemd. Auto-restart on failure, automatic night pause, fully autonomous operation.',
+    'hl.data.title': 'Rows/month · ML-Ready',
+    'hl.data.desc': '8-table Azure SQL schema. Ready for delay prediction, speed analysis and public transport ML models.',
+
     // Footer
+    'footer.by': 'By',
     'footer.license': 'Renfe data under CC BY 4.0 license',
     'footer.academic': 'Academic project',
     'footer.built': 'Built with Python, Azure and lots of coffee',

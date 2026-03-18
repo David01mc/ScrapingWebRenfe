@@ -57,12 +57,18 @@
 <section id="hero">
   <canvas id="particles"></canvas>
   <div class="hero-content">
+    <div class="hero-live-badge">
+      <span class="live-dot"></span>
+      <span data-i18n="hero.status">En producción · Azure VM B1s · Ubuntu 22.04</span>
+    </div>
     <div class="hero-badges">
       <span class="badge badge-python">Python 3.x</span>
       <span class="badge badge-azure">Azure SQL</span>
       <span class="badge badge-linux">Ubuntu 22.04</span>
       <span class="badge badge-gtfs">GTFS-RT</span>
       <span class="badge" style="border-color:#f05133;color:#f05133">systemd</span>
+      <span class="badge" style="border-color:#e34c26;color:#e34c26">ODBC 18</span>
+      <span class="badge" style="border-color:#22c55e;color:#22c55e">Haversine</span>
     </div>
 
     <h1 class="hero-title">
@@ -735,6 +741,36 @@
         <div class="stat-number counter" data-target="3">0</div>
         <div class="stat-label" data-i18n="stats.zones.label">zonas geográficas</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Project highlights ────────────────────────────────────────────────── -->
+<section class="highlights-section">
+  <div class="container">
+    <div class="highlights-grid">
+
+      <div class="highlight-card fade-in">
+        <div class="hl-icon"><i class="fas fa-arrow-trend-down"></i></div>
+        <div class="hl-big">−95%</div>
+        <div class="hl-label" data-i18n="hl.opt.title">Optimización Azure SQL</div>
+        <div class="hl-desc" data-i18n="hl.opt.desc">De 900k a 45k vCore-s/mes en 4 iteraciones de optimización — sistema full-month dentro del tier gratuito.</div>
+      </div>
+
+      <div class="highlight-card fade-in">
+        <div class="hl-icon"><i class="fas fa-server"></i></div>
+        <div class="hl-big">24/7</div>
+        <div class="hl-label" data-i18n="hl.prod.title">Sistema en producción</div>
+        <div class="hl-desc" data-i18n="hl.prod.desc">Azure VM B1s con Ubuntu 22.04. Servicio systemd con auto-reinicio, pausa nocturna automática y operación completamente autónoma.</div>
+      </div>
+
+      <div class="highlight-card fade-in">
+        <div class="hl-icon"><i class="fas fa-brain"></i></div>
+        <div class="hl-big">~1.5M</div>
+        <div class="hl-label" data-i18n="hl.data.title">Filas/mes · ML-Ready</div>
+        <div class="hl-desc" data-i18n="hl.data.desc">Dataset estructurado en 8 tablas Azure SQL. Listo para predicción de retrasos, análisis de velocidad y modelos ML de transporte.</div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -2158,6 +2194,12 @@ print(df_ast.groupby("line")["speed"].describe())</code></pre>
         <h3><i class="fas fa-train"></i> RenfeScraper</h3>
         <p data-i18n="footer.built">Construido con Python, Azure y mucho café</p>
         <p style="margin-top:8px"><span data-i18n="footer.license">Datos Renfe bajo licencia CC BY 4.0</span> · <span data-i18n="footer.academic">Proyecto académico</span></p>
+        <div class="footer-author">
+          <span style="font-size:0.82rem;color:var(--text-muted)" data-i18n="footer.by">By</span>
+          <a href="https://github.com/David01mc" target="_blank"><i class="fab fa-github"></i> David01mc</a>
+          <!-- Update href with your LinkedIn profile URL -->
+          <a href="https://www.linkedin.com/in/YOUR_PROFILE" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+        </div>
       </div>
       <div class="footer-links">
         <h4>Links</h4>
