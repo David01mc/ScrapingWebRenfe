@@ -611,4 +611,23 @@ document.addEventListener('DOMContentLoaded', () => {
     tw.dataset.text = finalText;
     setTimeout(() => typewriter(tw, finalText, 40), 300);
   }
+
+  // Glossary toast
+  initGlossToast();
 });
+
+// ── Glossary toast ───────────────────────────────────────────────────────────
+function initGlossToast() {
+  if (sessionStorage.getItem('gloss-toast-seen')) return;
+  const toast = document.getElementById('gloss-toast');
+  if (!toast) return;
+  setTimeout(() => toast.classList.add('show'), 1800);
+  setTimeout(() => dismissGlossToast(), 10000);
+}
+
+function dismissGlossToast() {
+  const toast = document.getElementById('gloss-toast');
+  if (!toast) return;
+  toast.classList.remove('show');
+  sessionStorage.setItem('gloss-toast-seen', '1');
+}

@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
 
   <!-- Our styles -->
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body>
 
@@ -2244,7 +2244,20 @@ print(df_ast.groupby("line")["speed"].describe())</code></pre>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-<script src="js/i18n.js?v=5"></script>
-<script src="js/main.js?v=5"></script>
+<!-- Glossary toast -->
+<div id="gloss-toast" class="gloss-toast" role="status" aria-live="polite">
+  <div class="gloss-toast-icon"><i class="fas fa-book-open"></i></div>
+  <div class="gloss-toast-body">
+    <p class="gloss-toast-title" data-i18n="toast.gloss.title">¡Glosario incluido!</p>
+    <p class="gloss-toast-desc" data-i18n="toast.gloss.desc">Los términos <span class="gloss-link" style="pointer-events:none">subrayados</span> tienen definición. ¡Haz clic en ellos o visita el glosario!</p>
+    <div class="gloss-toast-actions">
+      <a href="#glossary" class="gloss-toast-btn" data-i18n="toast.gloss.btn" onclick="dismissGlossToast()">Ver glosario</a>
+      <button class="gloss-toast-close" onclick="dismissGlossToast()" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+</div>
+
+<script src="js/i18n.js?v=6"></script>
+<script src="js/main.js?v=6"></script>
 </body>
 </html>

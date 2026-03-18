@@ -188,6 +188,11 @@ const TRANSLATIONS = {
     'footer.academic': 'Proyecto académico',
     'footer.built': 'Construido con Python, Azure y mucho café',
 
+    // Glossary toast
+    'toast.gloss.title': '¡Glosario incluido!',
+    'toast.gloss.desc': 'Los términos subrayados tienen definición. ¡Haz clic en ellos o visita el glosario!',
+    'toast.gloss.btn': 'Ver glosario',
+
     // Chart
     'chart.limit': 'Límite gratuito: 100.000',
 
@@ -459,6 +464,11 @@ const TRANSLATIONS = {
     'footer.license': 'Renfe data under CC BY 4.0 license',
     'footer.academic': 'Academic project',
     'footer.built': 'Built with Python, Azure and lots of coffee',
+
+    // Glossary toast
+    'toast.gloss.title': 'Glossary included!',
+    'toast.gloss.desc': 'Underlined terms have a definition. Click on them or visit the glossary!',
+    'toast.gloss.btn': 'View glossary',
 
     // Chart
     'chart.limit': 'Free tier limit: 100,000',

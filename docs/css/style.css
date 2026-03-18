@@ -832,6 +832,71 @@ code[class*="language-"], pre[class*="language-"] {
 }
 .footer-author a:hover { color: var(--accent); border-color: var(--accent); }
 
+/* ── Glossary toast ──────────────────────────────────────────────────────── */
+.gloss-toast {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 9999;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(214,45,97,.25), var(--shadow-glow);
+  padding: 16px 18px 16px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 300px;
+  transform: translateX(calc(100% + 32px));
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease;
+  pointer-events: none;
+}
+.gloss-toast.show {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.gloss-toast-icon {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: #fff;
+}
+.gloss-toast-body { flex: 1; min-width: 0; }
+.gloss-toast-title {
+  font-weight: 700; font-size: 0.88rem;
+  color: var(--text-primary); margin: 0 0 4px;
+}
+.gloss-toast-desc {
+  font-size: 0.8rem; color: var(--text-muted);
+  line-height: 1.5; margin: 0 0 10px;
+}
+.gloss-toast-actions { display: flex; align-items: center; gap: 8px; }
+.gloss-toast-btn {
+  font-size: 0.78rem; font-weight: 600;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 6px;
+  padding: 5px 12px; cursor: pointer;
+  text-decoration: none;
+  transition: opacity .2s;
+}
+.gloss-toast-btn:hover { opacity: .85; }
+.gloss-toast-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 0.85rem;
+  padding: 4px; line-height: 1;
+  transition: color .2s;
+}
+.gloss-toast-close:hover { color: var(--text-primary); }
+@media (max-width: 480px) {
+  .gloss-toast { right: 12px; left: 12px; max-width: none; top: 70px; }
+}
+/* Day mode */
+.day-mode .gloss-toast { box-shadow: 0 8px 32px rgba(214,45,97,.15); }
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
