@@ -214,11 +214,17 @@ function buildRealConsumptionChart() {
   const canvas = document.getElementById('realConsumptionChart');
   if (!canvas || typeof Chart === 'undefined') return;
 
-  const labels = CONSUMPTION_DATA.map(d => d[0]);
-  const values = CONSUMPTION_DATA.map(d => d[1]);
-  const t = chartTheme();
+  // Parse '15/03 13:06' → ISO timestamp so Chart.js time scale is proportional
+  function toISO(s) {
+    const [date, time] = s.split(' ');
+    const [day, month] = date.split('/');
+    return `2026-${month}-${day}T${time}:00`;
+  }
 
-  // Gradient fill
+  // Convert to {x: ISO, y: value} — time scale needs x/y pairs (no labels array)
+  const chartData = CONSUMPTION_DATA.map(([lbl, val]) => ({ x: toISO(lbl), y: val }));
+
+  const t = chartTheme();
   const ctx2d = canvas.getContext('2d');
   const grad = ctx2d.createLinearGradient(0, 0, 0, canvas.offsetHeight || 280);
   grad.addColorStop(0, 'rgba(214,45,97,0.22)');
@@ -250,15 +256,14 @@ function buildRealConsumptionChart() {
   new Chart(canvas, {
     type: 'line',
     data: {
-      labels,
       datasets: [{
         label: 'Free amount remaining',
-        data: values,
+        data: chartData,
         borderColor: '#d62d61',
         backgroundColor: grad,
         borderWidth: 2,
         fill: true,
-        tension: 0.25,
+        tension: 0.1,      // low tension — keep flat sections flat
         pointRadius: 0,
         pointHoverRadius: 5,
         pointHoverBackgroundColor: '#d62d61',
@@ -272,18 +277,16 @@ function buildRealConsumptionChart() {
       animation: { duration: 1000, easing: 'easeOutQuart' },
       scales: {
         x: {
+          type: 'time',           // proportional time axis — night gaps show as wide flat sections
+          time: {
+            unit: 'day',
+            displayFormats: { day: 'dd/MM' },
+            tooltipFormat: 'dd/MM HH:mm',
+          },
           ticks: {
             color: t.tick,
             font: { family: 'monospace', size: 11 },
             maxRotation: 0,
-            callback(value, index) {
-              const lbl = labels[index];
-              if (!lbl) return '';
-              const date = lbl.split(' ')[0];
-              if (index === 0) return date;
-              const prev = labels[index - 1];
-              return (prev && prev.split(' ')[0] !== date) ? date : '';
-            }
           },
           grid: { color: t.grid }
         },
@@ -307,8 +310,7 @@ function buildRealConsumptionChart() {
           titleColor: t.tooltipTitle,
           bodyColor: t.tooltipBody,
           callbacks: {
-            title: items => labels[items[0].dataIndex],
-            label: ctx => ' ' + ctx.raw.toLocaleString(document.documentElement.lang === 'es' ? 'es-ES' : 'en-US') + ' vCore-s remaining'
+            label: ctx => ' ' + ctx.parsed.y.toLocaleString(document.documentElement.lang === 'es' ? 'es-ES' : 'en-US') + ' vCore-s remaining'
           }
         }
       }
